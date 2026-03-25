@@ -4,9 +4,7 @@ on:
   push:
     branches: [main]
     paths: ['frontend-admin/**']
-  pull_request:
-    branches: [main]
-    paths: ['frontend-admin/**']
+  workflow_dispatch:  # Allow manual triggering
 
 jobs:
   test:
