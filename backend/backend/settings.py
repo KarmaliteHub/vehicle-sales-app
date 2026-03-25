@@ -21,7 +21,12 @@ ALLOWED_HOSTS = [
     'localhost', 
     '127.0.0.1',
     '.onrender.com',
+    'vehicle-sales-backend.onrender.com',
+    'webvehicles-backend.onrender.com',
     'webvehicles.netlify.app',
+    'vehicle-sales-admin.netlify.app',
+    'vehicle-sales-frontend.netlify.app',
+    'vehicle-sales-web.netlify.app',
     ]
 
 INSTALLED_APPS = [
@@ -43,6 +48,7 @@ MIDDLEWARE = [
     'vehicles.middleware.CircuitBreakerMiddleware',
     'vehicles.middleware.RetryMiddleware',
     'vehicles.middleware.DatabaseResilienceMiddleware',
+    'vehicles.middleware.CorsHeadersMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -146,4 +152,26 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:4300",
     "https://admincar.netlify.app",
     "https://webvehicles.netlify.app",
+    "https://vehicle-sales-admin.netlify.app",
+    "https://vehicle-sales-frontend.netlify.app",
+    "https://vehicle-sales-web.netlify.app",
 ]
+
+# Configuración de Cloudinary para archivos media
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
+
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME', ''),
+    'API_KEY': os.environ.get('CLOUDINARY_API_KEY', ''),
+    'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET', ''),
+}
+
+# Usar Cloudinary en producción, local storage en desarrollo
+if not DEBUG and CLOUDINARY_STORAGE['CLOUD_NAME']:
+    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+    MEDIA_URL = f"https://res.cloudinary.com/{CLOUDINARY_STORAGE['CLOUD_NAME']}/"
+else:
+    MEDIA_URL = '/media/'
+    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

@@ -1,0 +1,29 @@
+services:
+  # Backend Django API
+  - type: web
+    name: webvehicles-backend
+    env: python
+    buildCommand: "pip install -r backend/requirements.txt"
+    startCommand: "cd backend && python manage.py migrate && python manage.py populate_initial_configs && gunicorn backend.wsgi:application --bind 0.0.0.0:$PORT"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: False
+      - key: ALLOWED_HOSTS
+        value: ".onrender.com,webvehicles-backend.onrender.com"
+      - key: CORS_ALLOWED_ORIGINS
+        value: "https://vehicle-sales-admin.netlify.app,https://vehicle-sales-web.netlify.app,https://webvehicles.netlify.app"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: vehicle-sales-db
+          property: connectionString
+    healthCheckPath: /api/health/
+
+# PostgreSQL Database
+databases:
+  - name: vehicle-sales-db
+    databaseName: vehicle_sales
+    user: vehicle_user

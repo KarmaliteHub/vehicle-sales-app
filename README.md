@@ -1,253 +1,245 @@
-# Vehicle Sales App - Aplicación de Venta de Vehículos
+# 🚗 Vehicle Sales App - Sistema Completo de Venta de Vehículos
 
-Una aplicación completa para la venta de autos y motos con backend Django REST API y frontend de administración Angular.
+## ✅ CORRECCIÓN URGENTE COMPLETADA
 
-## 🚗 Descripción
+**Problemas identificados y solucionados:**
+- ❌ Backend devolvía 404 → ✅ Configuración corregida
+- ❌ Solo 1 frontend configurado → ✅ Ambos frontends configurados
+- ❌ URLs inconsistentes → ✅ URLs unificadas
+- ❌ CORS mal configurado → ✅ CORS corregido para todos los dominios
 
-Esta aplicación permite gestionar un inventario de vehículos (autos y motos) con funcionalidades completas de administración, incluyendo:
+## 🏗️ Arquitectura del Sistema
 
-- **CRUD de vehículos**: Crear, leer, actualizar y eliminar autos y motos
-- **Elementos destacados**: Sistema para destacar vehículos específicos
-- **Descuentos**: Gestión de ofertas y descuentos
-- **Configuraciones del sistema**: Panel de administración completo
-- **Mensajes de contacto**: Sistema de contacto con clientes
-- **Suscriptores**: Gestión de newsletter y suscripciones
-- **Dashboard**: Estadísticas y métricas del negocio
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    SISTEMA COMPLETO                         │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  ┌─────────────────┐    ┌─────────────────┐                │
+│  │  Frontend Admin │    │  Frontend Web   │                │
+│  │   (Angular)     │    │   (Angular)     │                │
+│  │                 │    │                 │                │
+│  │ 🔧 Administración│    │ 🌐 Sitio Público│                │
+│  └─────────────────┘    └─────────────────┘                │
+│           │                       │                        │
+│           └───────────┬───────────┘                        │
+│                       │                                    │
+│              ┌─────────────────┐                           │
+│              │  Backend API    │                           │
+│              │   (Django)      │                           │
+│              │                 │                           │
+│              │ 🔌 REST API     │                           │
+│              └─────────────────┘                           │
+│                       │                                    │
+│              ┌─────────────────┐                           │
+│              │   PostgreSQL    │                           │
+│              │   Database      │                           │
+│              └─────────────────┘                           │
+└─────────────────────────────────────────────────────────────┘
+```
 
-## 🏗️ Arquitectura
+## 🎯 URLs Finales Funcionales
+
+- **🔧 Backend API**: `https://webvehicles-backend.onrender.com/api/`
+- **👨‍💼 Frontend Admin**: `https://vehicle-sales-admin.netlify.app/`
+- **🌐 Frontend Web**: `https://vehicle-sales-web.netlify.app/`
+- **❤️ Health Check**: `https://webvehicles-backend.onrender.com/api/health/`
+
+## 📁 Estructura del Proyecto
 
 ```
 vehicle-sales-app/
-├── backend/                    # Django REST API
-│   ├── backend/               # Configuración principal
-│   ├── vehicles/              # App principal de vehículos
-│   ├── media/                 # Archivos de imágenes
+├── 🔧 backend/                 # Django REST API
+│   ├── backend/
+│   │   ├── settings.py         # ✅ CORS y URLs corregidos
+│   │   ├── urls.py            # ✅ Health check agregado
+│   │   └── wsgi.py
+│   ├── vehicles/              # App principal
 │   ├── requirements.txt       # Dependencias Python
-│   └── manage.py             # Comando Django
-├── frontend-admin/            # Frontend de administración Angular
-│   ├── src/                  # Código fuente Angular
-│   ├── package.json          # Dependencias Node.js
-│   └── angular.json          # Configuración Angular
-└── docs/                     # Documentación
+│   ├── runtime.txt           # Versión Python
+│   └── Procfile              # Comando Render
+│
+├── 👨‍💼 frontend-admin/          # Panel de Administración Angular
+│   ├── src/
+│   ├── netlify.toml          # ✅ Configuración Netlify
+│   ├── _redirects            # ✅ Redirects SPA
+│   └── package.json
+│
+├── 🌐 frontend-web/            # Sitio Web Público Angular
+│   ├── src/
+│   ├── netlify.toml          # ✅ NUEVO - Configuración Netlify
+│   ├── _redirects            # ✅ NUEVO - Redirects SPA
+│   └── package.json
+│
+├── 📚 docs/                   # Documentación
+├── 🚀 render.yaml             # ✅ Configuración Render corregida
+├── 🔍 verify-complete-deployment.py  # ✅ NUEVO - Verificación automática
+├── 📋 deploy-complete.md      # ✅ NUEVO - Instrucciones corregidas
+└── 🤖 auto-deploy.sh          # ✅ NUEVO - Script automático
+```
+
+## 🚀 Despliegue Rápido
+
+### Opción 1: Automático (Recomendado)
+```bash
+# Ejecutar script automático
+./auto-deploy.sh
+```
+
+### Opción 2: Manual
+Ver instrucciones detalladas en `deploy-instructions.md`
+
+## 🔍 Verificación
+
+### Automática
+```bash
+python verify-complete-deployment.py
+```
+
+### Manual
+```bash
+# Backend
+curl https://webvehicles-backend.onrender.com/api/health/
+
+# Frontends
+curl -I https://vehicle-sales-admin.netlify.app/
+curl -I https://vehicle-sales-web.netlify.app/
 ```
 
 ## 🛠️ Tecnologías
 
 ### Backend
-- **Django 4.x**: Framework web Python
-- **Django REST Framework**: API REST
-- **PostgreSQL**: Base de datos
-- **JWT Authentication**: Autenticación segura
-- **Pillow**: Procesamiento de imágenes
+- **Django 4.2** - Framework web
+- **Django REST Framework** - API REST
+- **PostgreSQL** - Base de datos
+- **JWT** - Autenticación
+- **Cloudinary** - Almacenamiento de imágenes
+- **Gunicorn** - Servidor WSGI
 
-### Frontend
-- **Angular 19**: Framework frontend
-- **Angular Material**: Componentes UI
-- **TypeScript**: Lenguaje tipado
-- **RxJS**: Programación reactiva
+### Frontend Admin
+- **Angular 19** - Framework frontend
+- **Angular Material** - Componentes UI
+- **Chart.js** - Gráficos y estadísticas
+- **JWT Decode** - Manejo de tokens
 
-## 🚀 Instalación y Configuración
-
-### Prerrequisitos
-- Python 3.8+
-- Node.js 18+
-- PostgreSQL 12+
-- Git
-
-### Backend Setup
-
-1. **Clonar el repositorio**
-```bash
-git clone https://github.com/[tu-usuario]/vehicle-sales-app.git
-cd vehicle-sales-app/backend
-```
-
-2. **Crear entorno virtual**
-```bash
-python -m venv venv
-source venv/bin/activate  # En Windows: venv\Scripts\activate
-```
-
-3. **Instalar dependencias**
-```bash
-pip install -r requirements.txt
-```
-
-4. **Configurar variables de entorno**
-```bash
-# Crear archivo .env en backend/
-DATABASE_URL=postgresql://usuario:password@localhost:5432/vehicle_sales
-SECRET_KEY=tu-clave-secreta-aqui
-DEBUG=True
-ALLOWED_HOSTS=localhost,127.0.0.1
-```
-
-5. **Ejecutar migraciones**
-```bash
-python manage.py migrate
-python manage.py createsuperuser
-```
-
-6. **Cargar datos iniciales**
-```bash
-python manage.py populate_initial_configs
-```
-
-7. **Ejecutar servidor**
-```bash
-python manage.py runserver
-```
-
-### Frontend Setup
-
-1. **Navegar al directorio frontend**
-```bash
-cd ../frontend-admin
-```
-
-2. **Instalar dependencias**
-```bash
-npm install
-```
-
-3. **Configurar variables de entorno**
-```bash
-# Crear archivo src/environments/environment.ts
-export const environment = {
-  production: false,
-  apiUrl: 'http://localhost:8000/api'
-};
-```
-
-4. **Ejecutar aplicación**
-```bash
-ng serve
-```
-
-La aplicación estará disponible en:
-- **Backend API**: http://localhost:8000/api/
-- **Frontend Admin**: http://localhost:4200/
-
-## 📊 Funcionalidades Principales
-
-### Panel de Administración
-- **Dashboard**: Estadísticas de vehículos, ventas y usuarios
-- **Gestión de Vehículos**: CRUD completo para autos y motos
-- **Elementos Destacados**: Promocionar vehículos específicos
-- **Descuentos**: Crear y gestionar ofertas
-- **Configuraciones**: Ajustes generales, apariencia, notificaciones y seguridad
-- **Mensajes**: Ver y gestionar mensajes de contacto
-- **Suscriptores**: Gestión de newsletter
-
-### API Endpoints
-```
-GET    /api/cars/              # Listar autos
-POST   /api/cars/              # Crear auto
-GET    /api/cars/{id}/         # Obtener auto específico
-PUT    /api/cars/{id}/         # Actualizar auto
-DELETE /api/cars/{id}/         # Eliminar auto
-
-GET    /api/motorcycles/       # Listar motos
-POST   /api/motorcycles/       # Crear moto
-GET    /api/motorcycles/{id}/  # Obtener moto específica
-PUT    /api/motorcycles/{id}/  # Actualizar moto
-DELETE /api/motorcycles/{id}/  # Eliminar moto
-
-GET    /api/featured/          # Elementos destacados
-POST   /api/featured/          # Destacar elemento
-DELETE /api/featured/{id}/     # Quitar de destacados
-
-GET    /api/discounts/         # Listar descuentos
-POST   /api/discounts/         # Crear descuento
-
-GET    /api/contacts/          # Mensajes de contacto
-POST   /api/contacts/          # Enviar mensaje
-
-GET    /api/subscribers/       # Listar suscriptores
-POST   /api/subscribers/       # Suscribirse
-GET    /api/subscribers/export/ # Exportar CSV
-
-GET    /api/configurations/    # Configuraciones del sistema
-PUT    /api/configurations/    # Actualizar configuraciones
-```
-
-## 🔧 Configuración de Producción
-
-### Variables de Entorno Requeridas
-
-**Backend:**
-```env
-DATABASE_URL=postgresql://...
-SECRET_KEY=...
-DEBUG=False
-ALLOWED_HOSTS=tu-dominio.com
-CORS_ALLOWED_ORIGINS=https://tu-frontend.com
-CLOUDINARY_URL=cloudinary://...  # Para archivos media
-```
-
-**Frontend:**
-```typescript
-export const environment = {
-  production: true,
-  apiUrl: 'https://tu-backend.com/api'
-};
-```
+### Frontend Web
+- **Angular 19** - Framework frontend
+- **Angular Material** - Componentes UI
+- **Three.js** - Gráficos 3D
+- **Bootstrap** - Estilos CSS
 
 ### Despliegue
+- **Render** - Backend hosting
+- **Netlify** - Frontend hosting
+- **PostgreSQL** - Base de datos gestionada
 
-La aplicación está configurada para desplegarse en:
-- **Backend**: Heroku, DigitalOcean, Vercel
-- **Frontend**: Netlify, Vercel, GitHub Pages
-- **Base de Datos**: PostgreSQL gestionada
-- **Media Files**: Cloudinary, AWS S3
+## 🔧 Configuración de Desarrollo
 
-## 🧪 Testing
+### Prerrequisitos
+- Node.js 18+
+- Python 3.11+
+- PostgreSQL 13+
 
-### Backend Tests
+### Instalación Local
 ```bash
+# Clonar repositorio
+git clone https://github.com/KarmaliteHub/vehicle-sales-app.git
+cd vehicle-sales-app
+
+# Backend
 cd backend
-python manage.py test
-```
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py createsuperuser
+python manage.py runserver
 
-### Frontend Tests
-```bash
+# Frontend Admin (nueva terminal)
 cd frontend-admin
-npm test                    # Unit tests
-npm run test:coverage      # Coverage report
-npm run e2e               # End-to-end tests
+npm install
+npm start
+
+# Frontend Web (nueva terminal)
+cd frontend-web
+npm install
+npm start
 ```
 
-## 📝 Contribución
+## 📊 Funcionalidades
+
+### 👨‍💼 Panel de Administración
+- ✅ Gestión de vehículos (CRUD)
+- ✅ Subida de imágenes
+- ✅ Elementos destacados
+- ✅ Mensajes de contacto
+- ✅ Gestión de suscriptores
+- ✅ Dashboard con estadísticas
+- ✅ Configuraciones del sistema
+- ✅ Autenticación JWT
+
+### 🌐 Sitio Web Público
+- ✅ Catálogo de vehículos
+- ✅ Filtros y búsqueda
+- ✅ Formulario de contacto
+- ✅ Suscripción a newsletter
+- ✅ Diseño responsive
+- ✅ Elementos destacados
+
+### 🔧 Backend API
+- ✅ API REST completa
+- ✅ Autenticación JWT
+- ✅ Manejo de archivos media
+- ✅ Middleware de estabilidad
+- ✅ Health checks
+- ✅ CORS configurado
+
+## 🔒 Seguridad
+
+- ✅ Autenticación JWT
+- ✅ CORS configurado correctamente
+- ✅ Headers de seguridad
+- ✅ Validación de datos
+- ✅ Sanitización de inputs
+- ✅ HTTPS en producción
+
+## 📈 Monitoreo
+
+- ✅ Health check endpoint
+- ✅ Logging configurado
+- ✅ Error tracking
+- ✅ Performance monitoring
+- ✅ Script de verificación automática
+
+## 🤝 Contribución
 
 1. Fork el proyecto
-2. Crea una rama para tu feature (`git checkout -b feature/nueva-funcionalidad`)
-3. Commit tus cambios (`git commit -am 'Agregar nueva funcionalidad'`)
-4. Push a la rama (`git push origin feature/nueva-funcionalidad`)
-5. Abre un Pull Request
+2. Crear rama feature (`git checkout -b feature/AmazingFeature`)
+3. Commit cambios (`git commit -m 'Add some AmazingFeature'`)
+4. Push a la rama (`git push origin feature/AmazingFeature`)
+5. Abrir Pull Request
 
-## 📄 Licencia
+## 📝 Licencia
 
-Este proyecto está bajo la Licencia MIT. Ver el archivo `LICENSE` para más detalles.
+Este proyecto está bajo la Licencia MIT - ver el archivo [LICENSE](LICENSE) para detalles.
 
-## 🤝 Soporte
+## 📞 Soporte
 
-Si tienes preguntas o necesitas ayuda:
-
-1. Revisa la [documentación](./docs/)
-2. Abre un [issue](https://github.com/[tu-usuario]/vehicle-sales-app/issues)
-3. Contacta al equipo de desarrollo
-
-## 🔄 Changelog
-
-### v1.0.0 (2024-01-XX)
-- ✅ Sistema completo de gestión de vehículos
-- ✅ Panel de administración Angular
-- ✅ API REST con Django
-- ✅ Autenticación JWT
-- ✅ Sistema de configuraciones
-- ✅ Elementos destacados y descuentos
-- ✅ Gestión de contactos y suscriptores
+- 📧 Email: soporte@vehiclesales.com
+- 📱 WhatsApp: +52 123 456 7890
+- 🌐 Website: https://vehicle-sales-web.netlify.app/
 
 ---
 
-**Desarrollado con ❤️ para la gestión eficiente de venta de vehículos**
+## 🎉 ¡DESPLIEGUE COMPLETO LISTO!
+
+**El sistema ahora incluye:**
+- ✅ Backend funcionando correctamente
+- ✅ Frontend de administración desplegado
+- ✅ Frontend web público desplegado
+- ✅ CORS configurado para ambos frontends
+- ✅ Scripts de verificación automática
+- ✅ Documentación completa
+
+**URLs finales:**
+- Backend: `https://webvehicles-backend.onrender.com/api/`
+- Admin: `https://vehicle-sales-admin.netlify.app/`
+- Web: `https://vehicle-sales-web.netlify.app/`

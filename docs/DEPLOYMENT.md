@@ -1,5 +1,139 @@
 # Deployment Guide - Vehicle Sales App
 
+## ✅ Nueva Configuración de Despliegue Completada
+
+La aplicación ha sido reconfigurada para desplegarse en plataformas modernas y escalables:
+
+- **Backend**: Render.com (reemplaza Railway)
+- **Frontend**: Netlify.com
+- **Database**: PostgreSQL gestionada por Render
+- **Media Files**: Cloudinary (opcional, fallback a almacenamiento local)
+
+## 🚀 Configuración Automática Completada
+
+### ✅ Backend (Render)
+- ✅ Configuración de build y start commands (`render.yaml`, `build.sh`)
+- ✅ Variables de entorno para producción
+- ✅ Health check endpoint: `/api/health/`
+- ✅ Middleware de estabilidad y reintentos
+- ✅ Configuración de PostgreSQL
+- ✅ Soporte para Cloudinary
+
+### ✅ Frontend (Netlify)
+- ✅ Build configuration con Angular (`netlify.toml`)
+- ✅ Redirects para SPA (`_redirects`)
+- ✅ Variables de entorno de producción
+- ✅ Optimización de build
+
+### ✅ CORS y Seguridad
+- ✅ Headers CORS configurados para nuevas URLs
+- ✅ Middleware personalizado para asegurar headers
+- ✅ Configuración de dominios permitidos
+
+### ✅ Media Files
+- ✅ Integración con Cloudinary
+- ✅ Fallback a almacenamiento local
+- ✅ Configuración automática según entorno
+
+## 📋 Instrucciones de Despliegue Manual
+
+**Ver `deploy-instructions.md` para pasos detallados paso a paso.**
+
+### Resumen Rápido:
+
+1. **Render (Backend)**:
+   - Crear Web Service conectado al repo
+   - Crear PostgreSQL database
+   - Configurar variables de entorno
+
+2. **Netlify (Frontend)**:
+   - Crear sitio conectado al repo
+   - Configurar build settings
+   - Configurar variables de entorno
+
+3. **Cloudinary (Opcional)**:
+   - Crear cuenta y obtener credenciales
+   - Configurar variables en Render
+
+## 🔍 Verificación Automática
+
+Ejecutar script de verificación:
+```bash
+python verify-deployment.py
+```
+
+O verificar manualmente:
+```bash
+# Health check
+curl https://vehicle-sales-backend.onrender.com/api/health/
+
+# Frontend
+curl https://vehicle-sales-admin.netlify.app/
+```
+
+## 🎯 URLs Finales Esperadas
+
+- **Backend API**: `https://vehicle-sales-backend.onrender.com/api/`
+- **Frontend Admin**: `https://vehicle-sales-admin.netlify.app/`
+- **Health Check**: `https://vehicle-sales-backend.onrender.com/api/health/`
+
+## 📁 Archivos de Configuración Creados
+
+- ✅ `render.yaml` - Configuración de servicios Render
+- ✅ `backend/build.sh` - Script de build para backend
+- ✅ `backend/runtime.txt` - Versión de Python
+- ✅ `frontend-admin/netlify.toml` - Configuración Netlify
+- ✅ `frontend-admin/_redirects` - Redirects para SPA
+- ✅ `deployment-config.md` - Guía detallada de configuración
+- ✅ `deploy-instructions.md` - Instrucciones paso a paso
+- ✅ `verify-deployment.py` - Script de verificación automática
+
+## 🛠️ Mejoras Implementadas
+
+### Estabilidad de Conexión
+- ✅ Circuit breaker pattern
+- ✅ Reintentos automáticos
+- ✅ Manejo robusto de errores de DB
+- ✅ Middleware de resiliencia
+
+### Configuración de Producción
+- ✅ Variables de entorno optimizadas
+- ✅ CORS configurado correctamente
+- ✅ Headers de seguridad
+- ✅ Compresión de assets
+
+### Monitoreo
+- ✅ Health check endpoint
+- ✅ Logging mejorado
+- ✅ Métricas de errores
+- ✅ Script de verificación automática
+
+## 🔧 Troubleshooting
+
+Ver `deploy-instructions.md` sección "Troubleshooting" para solución de problemas comunes.
+
+### Errores Comunes
+
+1. **Build Error en Render:**
+   - Verificar que `requirements.txt` esté en `/backend/`
+   - Verificar Python version en `runtime.txt`
+
+2. **CORS Error:**
+   - Verificar `CORS_ALLOWED_ORIGINS` en settings.py
+   - Verificar que las URLs coincidan exactamente
+
+3. **Database Connection Error:**
+   - Verificar `DATABASE_URL` en variables de entorno
+   - Verificar que la base de datos esté creada
+
+4. **Frontend Build Error:**
+   - Verificar Node.js version
+   - Verificar que `package.json` esté en `/frontend-admin/`
+
+---
+
+## 📚 Documentación Adicional (Opciones Alternativas)
+
 Esta guía describe cómo desplegar la aplicación de venta de vehículos en diferentes plataformas.
 
 ## Arquitectura de Despliegue

@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
-# Exit on error
+# exit on error
 set -o errexit
 
-# Modify this line as needed for your project
-python -m pip install --upgrade pip
-
+# Install dependencies
 pip install -r requirements.txt
 
-# Convert static asset files
+# Collect static files
 python manage.py collectstatic --no-input
 
-# Apply any outstanding database migrations
+# Run migrations
 python manage.py migrate
+
+# Populate initial configurations
+python manage.py populate_initial_configs

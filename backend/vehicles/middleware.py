@@ -148,3 +148,39 @@ class DatabaseResilienceMiddleware:
                 'message': 'Servicio temporalmente no disponible. Intenta más tarde.',
                 'retry_after': 60
             }, status=503)
+
+
+class CorsHeadersMiddleware:
+    """Middleware para asegurar headers CORS en todas las respuestas API"""
+    
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        response = self.get_response(request)
+        
+        # Asegurar headers CORS en todas las respuestas API
+        if request.path.startswith('/api/'):
+            response['Access-Control-Allow-Origin'] = self.get_allowed_origin(request)
+            response['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
+            response['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-Requested-With'
+            response['Access-Control-Allow-Credentials'] = 'true'
+            response['Access-Control-Max-Age'] = '86400'
+        
+        return response
+    
+    def get_allowed_origin(self, request):
+        """Determinar el origin permitido basado en el request"""
+        origin = request.META.get('HTTP_ORIGIN', '')
+        allowed_origins = [
+            'http://localhost:4200',
+            'http://localhost:4300',
+            'https://admincar.netlify.app',
+            'https://webvehicles.netlify.app',
+            'https://vehicle-sales-admin.netlify.app',
+            'https://vehicle-sales-frontend.netlify.app',
+        ]
+        
+        if origin in allowed_origins:
+            return origin
+        return allowed_origins[0]  # Default fallback

@@ -66,21 +66,21 @@ Este plan implementa la finalización de la aplicación de venta de vehículos, 
 - [ ] 3. Checkpoint - Verificar funcionalidad de configuraciones
   - Asegurar que todas las pruebas pasen, preguntar al usuario si surgen dudas.
 
-- [ ] 4. Migrar proyecto a nueva cuenta de GitHub
-  - [-] 4.1 Preparar estructura del repositorio
+- [x] 4. Migrar proyecto a nueva cuenta de GitHub
+  - [x] 4.1 Preparar estructura del repositorio
     - Crear estructura de carpetas organizada
     - Preparar README.md principal descriptivo
     - Configurar .gitignore apropiados
     - _Requisitos: 2.4_
 
-  - [ ] 4.2 Migrar código con historial completo
+  - [x] 4.2 Migrar código con historial completo
     - Clonar repositorio existente preservando historial
     - Crear nuevo repositorio en GitHub
     - Configurar remote origin a nueva cuenta
     - Push completo con historial de commits
     - _Requisitos: 2.1, 2.2, 2.3_
 
-  - [ ] 4.3 Configurar GitHub Actions para CI/CD
+  - [x] 4.3 Configurar GitHub Actions para CI/CD
     - Crear workflows para backend y frontend
     - Configurar despliegue automático
     - _Requisitos: 2.5_
@@ -121,25 +121,25 @@ Este plan implementa la finalización de la aplicación de venta de vehículos, 
 - [ ] 6. Checkpoint - Verificar corrección de errores de conexión
   - Asegurar que todas las pruebas pasen, preguntar al usuario si surgen dudas.
 
-- [ ] 7. Configurar nueva plataforma de despliegue
-  - [ ] 7.1 Configurar despliegue del backend Django
+- [x] 7. Configurar nueva plataforma de despliegue
+  - [x] 7.1 Configurar despliegue del backend Django
     - Seleccionar plataforma de despliegue (Heroku/DigitalOcean/Vercel)
     - Configurar variables de entorno
     - Configurar base de datos PostgreSQL
     - Migrar datos existentes
     - _Requisitos: 3.1, 3.5_
 
-  - [ ] 7.2 Configurar despliegue del frontend de administración
+  - [x] 7.2 Configurar despliegue del frontend de administración
     - Desplegar en Netlify o Vercel
     - Configurar variables de entorno con URLs del backend
     - _Requisitos: 3.2, 3.4_
 
-  - [ ] 7.3 Configurar servicio de archivos media
+  - [x] 7.3 Configurar servicio de archivos media
     - Configurar AWS S3 o Cloudinary para archivos media
     - Actualizar configuración de Django para servir media files
     - _Requisitos: 3.7_
 
-  - [ ] 7.4 Configurar CORS para frontends desplegados
+  - [x] 7.4 Configurar CORS para frontends desplegados
     - Actualizar configuración CORS en Django settings
     - Verificar headers CORS en todas las respuestas
     - _Requisitos: 5.8_
