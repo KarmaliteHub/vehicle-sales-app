@@ -66,8 +66,8 @@ Este plan implementa la finalización de la aplicación de venta de vehículos, 
 - [ ] 3. Checkpoint - Verificar funcionalidad de configuraciones
   - Asegurar que todas las pruebas pasen, preguntar al usuario si surgen dudas.
 
-- [-] 4. Migrar proyecto a nueva cuenta de GitHub
-  - [ ] 4.1 Preparar estructura del repositorio
+- [ ] 4. Migrar proyecto a nueva cuenta de GitHub
+  - [-] 4.1 Preparar estructura del repositorio
     - Crear estructura de carpetas organizada
     - Preparar README.md principal descriptivo
     - Configurar .gitignore apropiados
