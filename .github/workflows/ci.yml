@@ -1,0 +1,358 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.changes.outputs.backend }}
+      frontend: ${{ steps.changes.outputs.frontend }}
+      docs: ${{ steps.changes.outputs.docs }}
+    steps:
+    - uses: actions/checkout@v4
+    - uses: dorny/paths-filter@v2
+      id: changes
+      with:
+        filters: |
+          backend:
+            - 'backend/**'
+          frontend:
+            - 'frontend-admin/**'
+          docs:
+            - 'docs/**'
+            - '*.md'
+
+  backend-ci:
+    needs: changes
+    if: ${{ needs.changes.outputs.backend == 'true' }}
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        python-version: ['3.9', '3.10', '3.11']
+    
+    services:
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_vehicle_sales
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+        
+    - name: Cache pip dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('backend/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-${{ matrix.python-version }}-
+          ${{ runner.os }}-pip-
+    
+    - name: Install dependencies
+      run: |
+        cd backend
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install coverage flake8 black isort
+        
+    - name: Code formatting check (Black)
+      run: |
+        cd backend
+        black --check --diff .
+        
+    - name: Import sorting check (isort)
+      run: |
+        cd backend
+        isort --check-only --diff .
+        
+    - name: Linting (flake8)
+      run: |
+        cd backend
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+        
+    - name: Security check (bandit)
+      run: |
+        cd backend
+        pip install bandit
+        bandit -r . -x tests/
+        
+    - name: Run migrations
+      run: |
+        cd backend
+        python manage.py migrate
+      env:
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_vehicle_sales
+        SECRET_KEY: test-secret-key-for-ci
+        DEBUG: True
+        REDIS_URL: redis://localhost:6379/0
+        
+    - name: Run tests with coverage
+      run: |
+        cd backend
+        coverage run --source='.' manage.py test
+        coverage xml
+      env:
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_vehicle_sales
+        SECRET_KEY: test-secret-key-for-ci
+        DEBUG: True
+        REDIS_URL: redis://localhost:6379/0
+        
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: backend/coverage.xml
+        flags: backend
+        name: backend-${{ matrix.python-version }}
+
+  frontend-ci:
+    needs: changes
+    if: ${{ needs.changes.outputs.frontend == 'true' }}
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: ['16', '18', '20']
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+        cache-dependency-path: frontend-admin/package-lock.json
+        
+    - name: Install dependencies
+      run: |
+        cd frontend-admin
+        npm ci
+        
+    - name: Code formatting check (Prettier)
+      run: |
+        cd frontend-admin
+        npx prettier --check "src/**/*.{ts,html,css,scss,json}"
+        
+    - name: Linting (ESLint)
+      run: |
+        cd frontend-admin
+        npm run lint
+        
+    - name: Type checking
+      run: |
+        cd frontend-admin
+        npx tsc --noEmit
+        
+    - name: Run unit tests
+      run: |
+        cd frontend-admin
+        npm run test -- --watch=false --browsers=ChromeHeadless --code-coverage
+        
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: frontend-admin/coverage/lcov.info
+        flags: frontend
+        name: frontend-${{ matrix.node-version }}
+        
+    - name: Build application
+      run: |
+        cd frontend-admin
+        npm run build -- --configuration=production
+        
+    - name: Bundle size analysis
+      run: |
+        cd frontend-admin
+        npm install -g webpack-bundle-analyzer
+        npx webpack-bundle-analyzer dist/frontend-admin/main*.js --report --mode static --report-filename bundle-report.html
+        
+    - name: Upload bundle analysis
+      uses: actions/upload-artifact@v3
+      with:
+        name: bundle-analysis-${{ matrix.node-version }}
+        path: frontend-admin/bundle-report.html
+
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+        
+    - name: Upload Trivy scan results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v2
+      if: always()
+      with:
+        sarif_file: 'trivy-results.sarif'
+
+  docs-check:
+    needs: changes
+    if: ${{ needs.changes.outputs.docs == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Check markdown links
+      uses: gaurav-nelson/github-action-markdown-link-check@v1
+      with:
+        use-quiet-mode: 'yes'
+        use-verbose-mode: 'yes'
+        
+    - name: Spell check
+      uses: streetsidesoftware/cspell-action@v2
+      with:
+        files: "**/*.md"
+        
+  integration-tests:
+    needs: [backend-ci, frontend-ci]
+    if: ${{ always() && (needs.backend-ci.result == 'success' || needs.backend-ci.result == 'skipped') && (needs.frontend-ci.result == 'success' || needs.frontend-ci.result == 'skipped') }}
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_vehicle_sales
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: frontend-admin/package-lock.json
+    
+    - name: Install backend dependencies
+      run: |
+        cd backend
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        
+    - name: Install frontend dependencies
+      run: |
+        cd frontend-admin
+        npm ci
+        
+    - name: Start backend server
+      run: |
+        cd backend
+        python manage.py migrate
+        python manage.py populate_initial_configs
+        python manage.py runserver &
+        sleep 10
+      env:
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_vehicle_sales
+        SECRET_KEY: test-secret-key-for-ci
+        DEBUG: True
+        
+    - name: Build frontend
+      run: |
+        cd frontend-admin
+        npm run build
+        
+    - name: Run E2E tests
+      run: |
+        cd frontend-admin
+        # Install and run Cypress or Playwright
+        # npm run e2e:ci
+        echo "E2E tests would run here"
+        
+    - name: API integration tests
+      run: |
+        # Run API integration tests using pytest or similar
+        echo "API integration tests would run here"
+
+  notify:
+    needs: [backend-ci, frontend-ci, security-scan, docs-check, integration-tests]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+    - name: Notify CI results
+      uses: 8398a7/action-slack@v3
+      with:
+        status: custom
+        custom_payload: |
+          {
+            text: "CI Pipeline Results",
+            attachments: [{
+              color: '${{ job.status }}' === 'success' ? 'good' : 'danger',
+              fields: [{
+                title: 'Repository',
+                value: '${{ github.repository }}',
+                short: true
+              }, {
+                title: 'Branch',
+                value: '${{ github.ref_name }}',
+                short: true
+              }, {
+                title: 'Backend CI',
+                value: '${{ needs.backend-ci.result }}',
+                short: true
+              }, {
+                title: 'Frontend CI',
+                value: '${{ needs.frontend-ci.result }}',
+                short: true
+              }, {
+                title: 'Security Scan',
+                value: '${{ needs.security-scan.result }}',
+                short: true
+              }, {
+                title: 'Integration Tests',
+                value: '${{ needs.integration-tests.result }}',
+                short: true
+              }]
+            }]
+          }
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}

@@ -1,0 +1,96 @@
+/* Estilos para mensajes de error mejorados */
+
+.error-snackbar {
+  background-color: #f44336 !important;
+  color: white !important;
+}
+
+.error-connection {
+  background-color: #ff9800 !important; /* Naranja para errores de conexión */
+}
+
+.error-validation {
+  background-color: #e91e63 !important; /* Rosa para errores de validación */
+}
+
+.error-server {
+  background-color: #f44336 !important; /* Rojo para errores del servidor */
+}
+
+.error-unknown {
+  background-color: #9c27b0 !important; /* Púrpura para errores desconocidos */
+}
+
+.success-snackbar {
+  background-color: #4caf50 !important;
+  color: white !important;
+}
+
+.warning-snackbar {
+  background-color: #ff9800 !important;
+  color: white !important;
+}
+
+.info-snackbar {
+  background-color: #2196f3 !important;
+  color: white !important;
+}
+
+/* Animaciones para mensajes de error */
+.error-snackbar .mat-simple-snackbar-action {
+  color: white !important;
+  font-weight: bold;
+}
+
+.success-snackbar .mat-simple-snackbar-action {
+  color: white !important;
+  font-weight: bold;
+}
+
+.warning-snackbar .mat-simple-snackbar-action {
+  color: white !important;
+  font-weight: bold;
+}
+
+.info-snackbar .mat-simple-snackbar-action {
+  color: white !important;
+  font-weight: bold;
+}
+
+/* Estilos para indicadores de reintento */
+.retry-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.retry-spinner {
+  width: 16px !important;
+  height: 16px !important;
+}
+
+.connection-status {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.connection-status.online {
+  background-color: #4caf50;
+  color: white;
+}
+
+.connection-status.offline {
+  background-color: #f44336;
+  color: white;
+}
+
+.connection-status.reconnecting {
+  background-color: #ff9800;
+  color: white;
+}

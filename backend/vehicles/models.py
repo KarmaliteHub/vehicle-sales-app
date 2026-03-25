@@ -74,8 +74,27 @@ class FeaturedItem(models.Model):
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
     
     class Meta:
-        unique_together = ['car', 'motorcycle']
         ordering = ['-created_at']
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(car__isnull=False) | models.Q(motorcycle__isnull=False),
+                name='featured_item_has_vehicle'
+            ),
+            models.CheckConstraint(
+                check=~(models.Q(car__isnull=False) & models.Q(motorcycle__isnull=False)),
+                name='featured_item_single_vehicle'
+            ),
+            models.UniqueConstraint(
+                fields=['car'],
+                condition=models.Q(car__isnull=False),
+                name='unique_featured_car'
+            ),
+            models.UniqueConstraint(
+                fields=['motorcycle'],
+                condition=models.Q(motorcycle__isnull=False),
+                name='unique_featured_motorcycle'
+            ),
+        ]
     
     def save(self, *args, **kwargs):
         # Llenar automáticamente los campos title, price e image_url al guardar
@@ -163,3 +182,57 @@ class Subscriber(models.Model):
     
     def __str__(self):
         return self.email
+
+class SystemConfiguration(models.Model):
+    CATEGORY_CHOICES = [
+        ('general', 'General'),
+        ('appearance', 'Apariencia'),
+        ('notifications', 'Notificaciones'),
+        ('security', 'Seguridad'),
+    ]
+    
+    key = models.CharField(max_length=100, unique=True)
+    value = models.JSONField()
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES)
+    description = models.TextField(blank=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    updated_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    
+    class Meta:
+        ordering = ['category', 'key']
+        indexes = [
+            models.Index(fields=['category']),
+            models.Index(fields=['key']),
+        ]
+        
+    def __str__(self):
+        return f"{self.category}.{self.key}"
+
+class SystemLog(models.Model):
+    LOG_LEVELS = [
+        ('DEBUG', 'Debug'),
+        ('INFO', 'Info'),
+        ('WARNING', 'Warning'),
+        ('ERROR', 'Error'),
+        ('CRITICAL', 'Critical'),
+    ]
+    
+    level = models.CharField(max_length=10, choices=LOG_LEVELS)
+    message = models.TextField()
+    module = models.CharField(max_length=100)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    extra_data = models.JSONField(default=dict, blank=True)
+    
+    class Meta:
+        ordering = ['-timestamp']
+        indexes = [
+            models.Index(fields=['level', 'timestamp']),
+            models.Index(fields=['module', 'timestamp']),
+        ]
+        
+    def __str__(self):
+        return f"{self.level} - {self.module} - {self.timestamp.strftime('%Y-%m-%d %H:%M')}"

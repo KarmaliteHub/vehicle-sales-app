@@ -1,12 +1,30 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Car, Motorcycle, ContactMessage, Subscriber, FeaturedItem, Discount
+from .models import Car, Motorcycle, ContactMessage, Subscriber, FeaturedItem, Discount, SystemConfiguration, SystemLog
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username', 'email', 'date_joined']
         read_only_fields = ['date_joined']
+
+class SystemConfigurationSerializer(serializers.ModelSerializer):
+    updated_by = UserSerializer(read_only=True)
+    
+    class Meta:
+        model = SystemConfiguration
+        fields = ['id', 'key', 'value', 'category', 'description', 'is_active', 
+                 'created_at', 'updated_at', 'updated_by']
+        read_only_fields = ['created_at', 'updated_at', 'updated_by']
+
+class SystemLogSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
+    
+    class Meta:
+        model = SystemLog
+        fields = ['id', 'level', 'message', 'module', 'user', 'ip_address', 
+                 'timestamp', 'extra_data']
+        read_only_fields = ['timestamp']
 
 class CarSerializer(serializers.ModelSerializer):
     created_by = UserSerializer(read_only=True)

@@ -1,7 +1,9 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
+import { Observable, throwError, timer } from 'rxjs';
+import { catchError, retry } from 'rxjs/operators';
 import { AuthService } from './auth.service';
+import { ApiErrorHandlerService } from './api-error-handler.service';
 import { environment } from '../../environments/environment';
 
 @Injectable({
@@ -13,7 +15,8 @@ export class ApiService {
 
   constructor(
     private http: HttpClient,
-    private authService: AuthService
+    private authService: AuthService,
+    private apiErrorHandler: ApiErrorHandlerService
   ) {}
 
   private getHeaders(): HttpHeaders {
@@ -30,6 +33,42 @@ export class ApiService {
     return new HttpHeaders({
       'Authorization': `Bearer ${token}`
     });
+  }
+
+  /**
+   * Maneja errores HTTP con reintentos automáticos para errores de conexión
+   */
+  private handleError = (error: HttpErrorResponse): Observable<never> => {
+    console.error('🚨 API Error:', error);
+
+    // Si es un error de conexión, intentar reintentos
+    if (this.apiErrorHandler.shouldRetry(error)) {
+      console.log('🔄 Error de conexión detectado, se aplicarán reintentos automáticos');
+      return throwError(() => error);
+    }
+
+    // Para otros errores, no reintentar
+    return throwError(() => error);
+  }
+
+  /**
+   * Ejecuta una petición HTTP con manejo de errores y reintentos
+   */
+  private executeRequest<T>(request: Observable<T>): Observable<T> {
+    return request.pipe(
+      retry({
+        count: 3,
+        delay: (error: HttpErrorResponse, retryCount: number) => {
+          if (this.apiErrorHandler.shouldRetry(error)) {
+            const delayTime = this.apiErrorHandler.getRetryDelay(retryCount - 1);
+            console.log(`🔄 Reintentando en ${delayTime}ms (intento ${retryCount}/3)`);
+            return timer(delayTime);
+          }
+          return throwError(() => error);
+        }
+      }),
+      catchError(this.handleError)
+    );
   }
 
   // Método para construir URLs de imágenes completas - VERSIÓN CORREGIDA
@@ -144,6 +183,36 @@ export class ApiService {
     return this.http.post(`${this.apiUrl}/settings/`, settings, { headers: this.getHeaders() });
   }
 
+  // Configurations - New methods for system configurations
+  getConfigurations(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/configurations/`, { headers: this.getHeaders() });
+  }
+
+  getConfigurationsByCategory(category: string): Observable<any> {
+    return this.http.get(`${this.apiUrl}/configurations/by_category/`, {
+      headers: this.getHeaders(),
+      params: { category }
+    });
+  }
+
+  createConfiguration(config: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/configurations/`, config, { headers: this.getHeaders() });
+  }
+
+  updateConfiguration(id: number, config: any): Observable<any> {
+    return this.http.put(`${this.apiUrl}/configurations/${id}/`, config, { headers: this.getHeaders() });
+  }
+
+  bulkUpdateConfigurations(configurations: any[]): Observable<any> {
+    return this.http.post(`${this.apiUrl}/configurations/bulk_update/`, {
+      configurations
+    }, { headers: this.getHeaders() });
+  }
+
+  deleteConfiguration(id: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/configurations/${id}/`, { headers: this.getHeaders() });
+  }
+
   // Contact Messages
   getContactMessages(): Observable<any> {
     return this.http.get(`${this.apiUrl}/contact-messages/`, { headers: this.getHeaders() });
@@ -168,23 +237,28 @@ export class ApiService {
 
   // Featured Items
   getFeaturedItems(): Observable<any> {
-    return this.http.get(`${this.apiUrl}/featured/`, { headers: this.getHeaders() });
+    const request = this.http.get(`${this.apiUrl}/featured/`, { headers: this.getHeaders() });
+    return this.executeRequest(request);
   }
 
   createFeaturedItem(item: any): Observable<any> {
-    return this.http.post(`${this.apiUrl}/featured/`, item, { headers: this.getHeaders() });
+    const request = this.http.post(`${this.apiUrl}/featured/`, item, { headers: this.getHeaders() });
+    return this.executeRequest(request);
   }
 
   deleteFeaturedItem(id: number): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/featured/${id}/`, { headers: this.getHeaders() });
+    const request = this.http.delete(`${this.apiUrl}/featured/${id}/`, { headers: this.getHeaders() });
+    return this.executeRequest(request);
   }
 
   getAvailableCars(): Observable<any> {
-    return this.http.get(`${this.apiUrl}/available-cars/`, { headers: this.getHeaders() });
+    const request = this.http.get(`${this.apiUrl}/available-cars/`, { headers: this.getHeaders() });
+    return this.executeRequest(request);
   }
 
   getAvailableMotorcycles(): Observable<any> {
-    return this.http.get(`${this.apiUrl}/available-motorcycles/`, { headers: this.getHeaders() });
+    const request = this.http.get(`${this.apiUrl}/available-motorcycles/`, { headers: this.getHeaders() });
+    return this.executeRequest(request);
   }
 
   // Discounts

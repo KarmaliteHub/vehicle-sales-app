@@ -73,11 +73,16 @@
         </mat-card-content>
         <mat-divider></mat-divider>
         <mat-card-actions>
-          <button mat-raised-button color="primary" (click)="saveGeneralSettings()" [disabled]="!generalForm.valid">
-            <mat-icon>save</mat-icon> Guardar
+          <button mat-raised-button color="primary" (click)="saveGeneralSettings()"
+                  [disabled]="!generalForm.valid || isSavingGeneral">
+            <mat-spinner diameter="20" *ngIf="isSavingGeneral"></mat-spinner>
+            <mat-icon *ngIf="!isSavingGeneral">save</mat-icon>
+            {{ isSavingGeneral ? 'Guardando...' : 'Guardar' }}
           </button>
-          <button mat-button (click)="generalForm.reset()">
-            <mat-icon>refresh</mat-icon> Restablecer
+          <button mat-button (click)="loadGeneralSettings()" [disabled]="isLoadingGeneral">
+            <mat-spinner diameter="20" *ngIf="isLoadingGeneral"></mat-spinner>
+            <mat-icon *ngIf="!isLoadingGeneral">refresh</mat-icon>
+            {{ isLoadingGeneral ? 'Cargando...' : 'Recargar' }}
           </button>
         </mat-card-actions>
       </mat-card>
@@ -155,11 +160,16 @@
         </mat-card-content>
         <mat-divider></mat-divider>
         <mat-card-actions>
-          <button mat-raised-button color="primary" (click)="saveAppearanceSettings()" [disabled]="!appearanceForm.valid">
-            <mat-icon>save</mat-icon> Guardar
+          <button mat-raised-button color="primary" (click)="saveAppearanceSettings()"
+                  [disabled]="!appearanceForm.valid || isSavingAppearance">
+            <mat-spinner diameter="20" *ngIf="isSavingAppearance"></mat-spinner>
+            <mat-icon *ngIf="!isSavingAppearance">save</mat-icon>
+            {{ isSavingAppearance ? 'Guardando...' : 'Guardar' }}
           </button>
-          <button mat-button (click)="appearanceForm.reset()">
-            <mat-icon>refresh</mat-icon> Restablecer
+          <button mat-button (click)="loadAppearanceSettings()" [disabled]="isLoadingAppearance">
+            <mat-spinner diameter="20" *ngIf="isLoadingAppearance"></mat-spinner>
+            <mat-icon *ngIf="!isLoadingAppearance">refresh</mat-icon>
+            {{ isLoadingAppearance ? 'Cargando...' : 'Recargar' }}
           </button>
         </mat-card-actions>
       </mat-card>
@@ -241,11 +251,16 @@
         </mat-card-content>
         <mat-divider></mat-divider>
         <mat-card-actions>
-          <button mat-raised-button color="primary" (click)="saveNotificationSettings()">
-            <mat-icon>save</mat-icon> Guardar
+          <button mat-raised-button color="primary" (click)="saveNotificationSettings()"
+                  [disabled]="isSavingNotifications">
+            <mat-spinner diameter="20" *ngIf="isSavingNotifications"></mat-spinner>
+            <mat-icon *ngIf="!isSavingNotifications">save</mat-icon>
+            {{ isSavingNotifications ? 'Guardando...' : 'Guardar' }}
           </button>
-          <button mat-button (click)="notificationsForm.reset()">
-            <mat-icon>refresh</mat-icon> Restablecer
+          <button mat-button (click)="loadNotificationSettings()" [disabled]="isLoadingNotifications">
+            <mat-spinner diameter="20" *ngIf="isLoadingNotifications"></mat-spinner>
+            <mat-icon *ngIf="!isLoadingNotifications">refresh</mat-icon>
+            {{ isLoadingNotifications ? 'Cargando...' : 'Recargar' }}
           </button>
         </mat-card-actions>
       </mat-card>
@@ -341,11 +356,16 @@
         </mat-card-content>
         <mat-divider></mat-divider>
         <mat-card-actions>
-          <button mat-raised-button color="primary" (click)="saveSecuritySettings()" [disabled]="!securityForm.valid">
-            <mat-icon>save</mat-icon> Guardar
+          <button mat-raised-button color="primary" (click)="saveSecuritySettings()"
+                  [disabled]="!securityForm.valid || isSavingSecurity">
+            <mat-spinner diameter="20" *ngIf="isSavingSecurity"></mat-spinner>
+            <mat-icon *ngIf="!isSavingSecurity">save</mat-icon>
+            {{ isSavingSecurity ? 'Guardando...' : 'Guardar' }}
           </button>
-          <button mat-button (click)="securityForm.reset()">
-            <mat-icon>refresh</mat-icon> Restablecer
+          <button mat-button (click)="loadSecuritySettings()" [disabled]="isLoadingSecurity">
+            <mat-spinner diameter="20" *ngIf="isLoadingSecurity"></mat-spinner>
+            <mat-icon *ngIf="!isLoadingSecurity">refresh</mat-icon>
+            {{ isLoadingSecurity ? 'Cargando...' : 'Recargar' }}
           </button>
         </mat-card-actions>
       </mat-card>

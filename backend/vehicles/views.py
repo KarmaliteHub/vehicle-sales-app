@@ -1,10 +1,10 @@
-from rest_framework import generics, permissions, status
+from rest_framework import generics, permissions, status, viewsets
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, action
 from django.contrib.auth.models import User
 from django.db.models import Q
-from .models import Car, Motorcycle, ContactMessage, Subscriber, FeaturedItem, Discount
+from .models import Car, Motorcycle, ContactMessage, Subscriber, FeaturedItem, Discount, SystemConfiguration, SystemLog
 from .serializers import (
     CarSerializer, 
     MotorcycleSerializer, 
@@ -12,7 +12,9 @@ from .serializers import (
     ContactMessageSerializer,
     SubscriberSerializer,
     FeaturedItemSerializer,
-    DiscountSerializer
+    DiscountSerializer,
+    SystemConfigurationSerializer,
+    SystemLogSerializer
 )
 from rest_framework_simplejwt.tokens import RefreshToken
 import csv
@@ -172,7 +174,6 @@ class UserListView(generics.ListAPIView):
 
 # Featured Items Views
 class FeaturedItemListCreateView(generics.ListCreateAPIView):
-    queryset = FeaturedItem.objects.all().order_by('-created_at')
     serializer_class = FeaturedItemSerializer
     permission_classes = [permissions.IsAuthenticated]
     
@@ -180,6 +181,12 @@ class FeaturedItemListCreateView(generics.ListCreateAPIView):
         context = super().get_serializer_context()
         context['request'] = self.request
         return context
+    
+    def get_queryset(self):
+        # Optimizar queries con select_related y prefetch_related
+        return FeaturedItem.objects.select_related(
+            'created_by', 'car', 'motorcycle'
+        ).order_by('-created_at')
     
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user)
@@ -204,12 +211,14 @@ class AvailableCarsListView(generics.ListAPIView):
         return context
     
     def get_queryset(self):
-        # Excluir autos que ya están destacados
+        # Excluir autos que ya están destacados con optimización de queries
         featured_car_ids = FeaturedItem.objects.filter(
             vehicle_type='car'
         ).exclude(car__isnull=True).values_list('car_id', flat=True)
         
-        return Car.objects.exclude(id__in=featured_car_ids).order_by('-created_at')
+        return Car.objects.select_related('created_by').exclude(
+            id__in=featured_car_ids
+        ).order_by('-created_at')
 
 class AvailableMotorcyclesListView(generics.ListAPIView):
     serializer_class = MotorcycleSerializer
@@ -221,12 +230,14 @@ class AvailableMotorcyclesListView(generics.ListAPIView):
         return context
     
     def get_queryset(self):
-        # Excluir motos que ya están destacadas
+        # Excluir motos que ya están destacadas con optimización de queries
         featured_motorcycle_ids = FeaturedItem.objects.filter(
             vehicle_type='motorcycle'
         ).exclude(motorcycle__isnull=True).values_list('motorcycle_id', flat=True)
         
-        return Motorcycle.objects.exclude(id__in=featured_motorcycle_ids).order_by('-created_at')
+        return Motorcycle.objects.select_related('created_by').exclude(
+            id__in=featured_motorcycle_ids
+        ).order_by('-created_at')
 
 # Discount Views
 class DiscountListCreateView(generics.ListCreateAPIView):
@@ -287,3 +298,72 @@ class AvailableMotorcyclesForDiscountListView(generics.ListAPIView):
         ).exclude(motorcycle__isnull=True).values_list('motorcycle_id', flat=True)
         
         return Motorcycle.objects.exclude(id__in=discounted_motorcycle_ids).order_by('-created_at')
+
+# Configuration Views
+class SystemConfigurationViewSet(viewsets.ModelViewSet):
+    queryset = SystemConfiguration.objects.all()
+    serializer_class = SystemConfigurationSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def perform_create(self, serializer):
+        serializer.save(updated_by=self.request.user)
+    
+    def perform_update(self, serializer):
+        serializer.save(updated_by=self.request.user)
+    
+    @action(detail=False, methods=['get'])
+    def by_category(self, request):
+        """Get configurations by category"""
+        category = request.query_params.get('category')
+        if category:
+            configurations = self.queryset.filter(category=category, is_active=True)
+            serializer = self.get_serializer(configurations, many=True)
+            return Response(serializer.data)
+        return Response({'error': 'Category parameter is required'}, status=400)
+    
+    @action(detail=False, methods=['post'])
+    def bulk_update(self, request):
+        """Update multiple configurations at once"""
+        configurations_data = request.data.get('configurations', [])
+        updated_configs = []
+        
+        for config_data in configurations_data:
+            config_key = config_data.get('key')
+            if config_key:
+                config, created = SystemConfiguration.objects.get_or_create(
+                    key=config_key,
+                    defaults={
+                        'value': config_data.get('value', {}),
+                        'category': config_data.get('category', 'general'),
+                        'description': config_data.get('description', ''),
+                        'updated_by': request.user
+                    }
+                )
+                if not created:
+                    config.value = config_data.get('value', config.value)
+                    config.category = config_data.get('category', config.category)
+                    config.description = config_data.get('description', config.description)
+                    config.updated_by = request.user
+                    config.save()
+                
+                updated_configs.append(config)
+        
+        serializer = self.get_serializer(updated_configs, many=True)
+        return Response(serializer.data)
+
+class SystemLogViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = SystemLog.objects.all()
+    serializer_class = SystemLogSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        level = self.request.query_params.get('level')
+        module = self.request.query_params.get('module')
+        
+        if level:
+            queryset = queryset.filter(level=level)
+        if module:
+            queryset = queryset.filter(module=module)
+            
+        return queryset.order_by('-timestamp')

@@ -1,0 +1,124 @@
+name: Deploy Backend
+
+on:
+  push:
+    branches: [main]
+    paths: ['backend/**']
+  pull_request:
+    branches: [main]
+    paths: ['backend/**']
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_vehicle_sales
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        
+    - name: Cache pip dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('backend/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+    
+    - name: Install dependencies
+      run: |
+        cd backend
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        
+    - name: Run migrations
+      run: |
+        cd backend
+        python manage.py migrate
+      env:
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_vehicle_sales
+        SECRET_KEY: test-secret-key-for-ci
+        DEBUG: True
+        
+    - name: Run tests
+      run: |
+        cd backend
+        python manage.py test
+      env:
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_vehicle_sales
+        SECRET_KEY: test-secret-key-for-ci
+        DEBUG: True
+        
+    - name: Run linting
+      run: |
+        cd backend
+        pip install flake8
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Fetch full history for proper deployment
+    
+    # Heroku Deployment
+    - name: Deploy to Heroku
+      uses: akhileshns/heroku-deploy@v3.12.14
+      with:
+        heroku_api_key: ${{ secrets.HEROKU_API_KEY }}
+        heroku_app_name: ${{ secrets.HEROKU_APP_NAME }}
+        heroku_email: ${{ secrets.HEROKU_EMAIL }}
+        appdir: "backend"
+        
+    # Alternative: DigitalOcean App Platform
+    # - name: Deploy to DigitalOcean
+    #   uses: digitalocean/app_action@v1.1.5
+    #   with:
+    #     app_name: ${{ secrets.DO_APP_NAME }}
+    #     token: ${{ secrets.DO_ACCESS_TOKEN }}
+        
+    # Alternative: Railway Deployment
+    # - name: Deploy to Railway
+    #   uses: bervProject/railway-deploy@v1.0.0
+    #   with:
+    #     railway_token: ${{ secrets.RAILWAY_TOKEN }}
+    #     service: ${{ secrets.RAILWAY_SERVICE }}
+        
+    - name: Run post-deployment commands
+      if: success()
+      run: |
+        # Add any post-deployment commands here
+        # For example, running migrations on the deployed app
+        echo "Deployment successful!"
+        
+    - name: Notify deployment status
+      if: always()
+      uses: 8398a7/action-slack@v3
+      with:
+        status: ${{ job.status }}
+        channel: '#deployments'
+        webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}

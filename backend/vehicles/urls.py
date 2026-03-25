@@ -1,6 +1,12 @@
-from django.urls import path
+from django.urls import path, include
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from rest_framework.routers import DefaultRouter
 from . import views
+
+# Create router for ViewSets
+router = DefaultRouter()
+router.register(r'configurations', views.SystemConfigurationViewSet)
+router.register(r'system-logs', views.SystemLogViewSet)
 
 urlpatterns = [
     path('register/', views.UserRegistrationView.as_view(), name='register'),
@@ -35,4 +41,7 @@ urlpatterns = [
     path('discounts/<int:pk>/', views.DiscountDetailView.as_view(), name='discount-detail'),
     path('available-cars-discount/', views.AvailableCarsForDiscountListView.as_view(), name='available-cars-discount'),
     path('available-motorcycles-discount/', views.AvailableMotorcyclesForDiscountListView.as_view(), name='available-motorcycles-discount'),
+    
+    # Include router URLs for ViewSets
+    path('', include(router.urls)),
 ]

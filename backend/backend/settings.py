@@ -40,6 +40,9 @@ MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
+    'vehicles.middleware.CircuitBreakerMiddleware',
+    'vehicles.middleware.RetryMiddleware',
+    'vehicles.middleware.DatabaseResilienceMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -85,8 +88,16 @@ else:
             'PASSWORD': os.environ.get('DATABASE_PASSWORD', 'securepassword123'),
             'HOST': os.environ.get('DATABASE_HOST', 'localhost'),
             'PORT': os.environ.get('DATABASE_PORT', '5432'),
+            'OPTIONS': {
+                'connect_timeout': 10,
+                'application_name': 'vehicle_app',
+            }
         }
     }
+
+# Connection pooling configuration
+DATABASES['default']['CONN_MAX_AGE'] = 600
+DATABASES['default']['CONN_HEALTH_CHECKS'] = True
 
 AUTH_PASSWORD_VALIDATORS = [
     {

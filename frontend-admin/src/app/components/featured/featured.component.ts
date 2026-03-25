@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ApiService } from '../../services/api.service';
+import { ErrorMessageService } from '../../services/error-message.service';
 import { MatDialog } from '@angular/material/dialog';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
@@ -10,7 +10,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { ImageUrlPipe } from '../../pipes/image-url.pipe'; // NUEVO
+import { ImageUrlPipe } from '../../pipes/image-url.pipe';
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
   selector: 'app-featured',
@@ -39,7 +40,7 @@ export class FeaturedComponent implements OnInit {
   constructor(
     private apiService: ApiService,
     private dialog: MatDialog,
-    private snackBar: MatSnackBar
+    private errorMessageService: ErrorMessageService
   ) {}
 
   ngOnInit(): void {
@@ -54,9 +55,9 @@ export class FeaturedComponent implements OnInit {
         this.featuredItems = response;
         this.isLoading = false;
       },
-      error: (error) => {
+      error: (error: HttpErrorResponse) => {
         console.error('Error loading featured items:', error);
-        this.snackBar.open('Error al cargar los destacados', 'Cerrar', { duration: 3000 });
+        this.errorMessageService.handleConnectionError(error);
         this.isLoading = false;
       }
     });
@@ -67,9 +68,9 @@ export class FeaturedComponent implements OnInit {
       next: (response: any) => {
         this.cars = response;
       },
-      error: (error) => {
+      error: (error: HttpErrorResponse) => {
         console.error('Error loading available cars:', error);
-        this.snackBar.open('Error al cargar los autos disponibles', 'Cerrar', { duration: 3000 });
+        this.errorMessageService.handleConnectionError(error);
       }
     });
 
@@ -77,9 +78,9 @@ export class FeaturedComponent implements OnInit {
       next: (response: any) => {
         this.motorcycles = response;
       },
-      error: (error) => {
+      error: (error: HttpErrorResponse) => {
         console.error('Error loading available motorcycles:', error);
-        this.snackBar.open('Error al cargar las motos disponibles', 'Cerrar', { duration: 3000 });
+        this.errorMessageService.handleConnectionError(error);
       }
     });
   }
@@ -104,17 +105,13 @@ export class FeaturedComponent implements OnInit {
 
     this.apiService.createFeaturedItem(featuredItem).subscribe({
       next: (response: any) => {
-        this.snackBar.open('Auto agregado a destacados', 'Cerrar', { duration: 3000 });
+        this.errorMessageService.showSuccess('Auto agregado a destacados');
         this.loadFeaturedItems();
         this.closeSelectionPanel();
       },
-      error: (error) => {
+      error: (error: HttpErrorResponse) => {
         console.error('Error adding car to featured:', error);
-        if (error.status === 400) {
-          this.snackBar.open('Este auto ya está en destacados', 'Cerrar', { duration: 3000 });
-        } else {
-          this.snackBar.open('Error al agregar el auto a destacados', 'Cerrar', { duration: 3000 });
-        }
+        this.errorMessageService.handleFeaturedItemError(error);
       }
     });
   }
@@ -130,17 +127,13 @@ export class FeaturedComponent implements OnInit {
 
     this.apiService.createFeaturedItem(featuredItem).subscribe({
       next: (response: any) => {
-        this.snackBar.open('Moto agregada a destacados', 'Cerrar', { duration: 3000 });
+        this.errorMessageService.showSuccess('Moto agregada a destacados');
         this.loadFeaturedItems();
         this.closeSelectionPanel();
       },
-      error: (error) => {
+      error: (error: HttpErrorResponse) => {
         console.error('Error adding motorcycle to featured:', error);
-        if (error.status === 400) {
-          this.snackBar.open('Esta moto ya está en destacados', 'Cerrar', { duration: 3000 });
-        } else {
-          this.snackBar.open('Error al agregar la moto a destacados', 'Cerrar', { duration: 3000 });
-        }
+        this.errorMessageService.handleFeaturedItemError(error);
       }
     });
   }
@@ -158,12 +151,12 @@ export class FeaturedComponent implements OnInit {
       if (result) {
         this.apiService.deleteFeaturedItem(item.id).subscribe({
           next: () => {
-            this.snackBar.open('Elemento eliminado de destacados', 'Cerrar', { duration: 3000 });
+            this.errorMessageService.showSuccess('Elemento eliminado de destacados');
             this.loadFeaturedItems();
           },
-          error: (error) => {
+          error: (error: HttpErrorResponse) => {
             console.error('Error removing featured item:', error);
-            this.snackBar.open('Error al eliminar el elemento de destacados', 'Cerrar', { duration: 3000 });
+            this.errorMessageService.showError(error);
           }
         });
       }
