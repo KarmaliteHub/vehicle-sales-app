@@ -233,6 +233,8 @@ export class SettingsComponent implements OnInit {
       this.configurationService.saveGeneralSettings(settings).subscribe({
         next: () => {
           this.showSuccessMessage('Configuración general guardada correctamente');
+          // Recargar los settings para asegurar consistencia
+          this.loadGeneralSettings();
           this.isSavingGeneral = false;
         },
         error: (error) => {
@@ -251,12 +253,12 @@ export class SettingsComponent implements OnInit {
       this.isSavingAppearance = true;
       const settings: AppearanceSettings = this.appearanceForm.value;
 
-      // Aplicar cambios de tema inmediatamente
       this.applyThemeChanges(settings.theme);
 
       this.configurationService.saveAppearanceSettings(settings).subscribe({
         next: () => {
           this.showSuccessMessage('Configuración de apariencia guardada correctamente');
+          this.loadAppearanceSettings();
           this.isSavingAppearance = false;
         },
         error: (error) => {
@@ -278,6 +280,7 @@ export class SettingsComponent implements OnInit {
       this.configurationService.saveNotificationSettings(settings).subscribe({
         next: () => {
           this.showSuccessMessage('Configuración de notificaciones guardada correctamente');
+          this.loadNotificationSettings();
           this.isSavingNotifications = false;
         },
         error: (error) => {
@@ -294,7 +297,6 @@ export class SettingsComponent implements OnInit {
       this.isSavingSecurity = true;
       const settings: SecuritySettings = this.securityForm.value;
 
-      // Validar parámetros de seguridad
       if (settings.sessionTimeout < 5 || settings.sessionTimeout > 120) {
         this.showErrorMessage('El tiempo de sesión debe estar entre 5 y 120 minutos');
         this.isSavingSecurity = false;
@@ -316,6 +318,7 @@ export class SettingsComponent implements OnInit {
       this.configurationService.saveSecuritySettings(settings).subscribe({
         next: () => {
           this.showSuccessMessage('Configuración de seguridad guardada correctamente');
+          this.loadSecuritySettings();
           this.isSavingSecurity = false;
         },
         error: (error) => {

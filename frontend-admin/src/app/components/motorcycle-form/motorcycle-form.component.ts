@@ -38,7 +38,6 @@ export class MotorcycleFormComponent implements OnInit {
   motorcycleId: number | null = null;
   maxYear = new Date().getFullYear() + 1;
 
-  // CATEGORÍAS CORREGIDAS según el backend
   categoryOptions = [
     { value: 'combustion', label: 'Combustión' },
     { value: 'electric', label: 'Eléctrico' },
@@ -84,7 +83,12 @@ export class MotorcycleFormComponent implements OnInit {
     this.isLoading = true;
     this.apiService.getMotorcycleById(id).subscribe({
       next: (motorcycle: any) => {
-        this.motorcycleForm.patchValue(motorcycle);
+        // Asegurar que is_sold sea booleano
+        const motorcycleData = {
+          ...motorcycle,
+          is_sold: motorcycle.is_sold === true || motorcycle.is_sold === 'true' || motorcycle.is_sold === 1 || motorcycle.is_sold === '1'
+        };
+        this.motorcycleForm.patchValue(motorcycleData);
         this.isLoading = false;
       },
       error: (error: any) => {
@@ -98,13 +102,11 @@ export class MotorcycleFormComponent implements OnInit {
   onImageSelected(event: any): void {
     const file = event.target.files[0];
     if (file) {
-      // Validar tipo de archivo
       if (!file.type.match('image.*')) {
         this.snackBar.open('Por favor selecciona solo imágenes', 'Cerrar', { duration: 3000 });
         return;
       }
 
-      // Validar tamaño de archivo (5MB máximo)
       if (file.size > 5 * 1024 * 1024) {
         this.snackBar.open('La imagen no debe exceder los 5MB', 'Cerrar', { duration: 3000 });
         return;
@@ -120,12 +122,29 @@ export class MotorcycleFormComponent implements OnInit {
       this.isLoading = true;
 
       const formData = new FormData();
+
+      // Procesar cada campo del formulario
       Object.keys(this.motorcycleForm.controls).forEach(key => {
         const value = this.motorcycleForm.get(key)?.value;
-        if (value !== null && value !== undefined) {
-          formData.append(key, value);
+
+        // Para campos que no son archivos
+        if (key !== 'image') {
+          if (value !== null && value !== undefined && value !== '') {
+            // Convertir booleano a string para FormData
+            if (key === 'is_sold') {
+              formData.append(key, value ? 'true' : 'false');
+            } else {
+              formData.append(key, value.toString());
+            }
+          }
         }
       });
+
+      // Agregar imagen si fue seleccionada
+      const imageFile = this.motorcycleForm.get('image')?.value;
+      if (imageFile && imageFile instanceof File) {
+        formData.append('image', imageFile);
+      }
 
       const request = this.isEdit && this.motorcycleId
         ? this.apiService.updateMotorcycle(this.motorcycleId, formData)
@@ -143,16 +162,24 @@ export class MotorcycleFormComponent implements OnInit {
         },
         error: (error: any) => {
           console.error('Error saving motorcycle:', error);
-          this.snackBar.open(
-            `Error al ${this.isEdit ? 'actualizar' : 'crear'} la moto: ${error.error?.detail || error.message}`,
-            'Cerrar',
-            { duration: 5000 }
-          );
+          let errorMessage = `Error al ${this.isEdit ? 'actualizar' : 'crear'} la moto`;
+
+          if (error.error) {
+            if (typeof error.error === 'object') {
+              const errors = Object.values(error.error).flat();
+              if (errors.length > 0) {
+                errorMessage += `: ${errors.join(', ')}`;
+              }
+            } else if (typeof error.error === 'string') {
+              errorMessage += `: ${error.error}`;
+            }
+          }
+
+          this.snackBar.open(errorMessage, 'Cerrar', { duration: 5000 });
           this.isLoading = false;
         }
       });
     } else {
-      // Marcar todos los campos como tocados para mostrar errores
       Object.keys(this.motorcycleForm.controls).forEach(key => {
         this.motorcycleForm.get(key)?.markAsTouched();
       });

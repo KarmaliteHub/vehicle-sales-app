@@ -82,7 +82,12 @@ export class CarFormComponent implements OnInit {
     this.isLoading = true;
     this.apiService.getCarById(id).subscribe({
       next: (car: any) => {
-        this.carForm.patchValue(car);
+        // Asegurar que is_sold sea booleano
+        const carData = {
+          ...car,
+          is_sold: car.is_sold === true || car.is_sold === 'true' || car.is_sold === 1 || car.is_sold === '1'
+        };
+        this.carForm.patchValue(carData);
         this.isLoading = false;
       },
       error: (error: any) => {
@@ -116,12 +121,29 @@ export class CarFormComponent implements OnInit {
       this.isLoading = true;
 
       const formData = new FormData();
+
+      // Procesar cada campo del formulario
       Object.keys(this.carForm.controls).forEach(key => {
         const value = this.carForm.get(key)?.value;
-        if (value !== null && value !== undefined) {
-          formData.append(key, value);
+
+        // Para campos que no son archivos
+        if (key !== 'image') {
+          if (value !== null && value !== undefined && value !== '') {
+            // Convertir booleano a string para FormData
+            if (key === 'is_sold') {
+              formData.append(key, value ? 'true' : 'false');
+            } else {
+              formData.append(key, value.toString());
+            }
+          }
         }
       });
+
+      // Agregar imagen si fue seleccionada
+      const imageFile = this.carForm.get('image')?.value;
+      if (imageFile && imageFile instanceof File) {
+        formData.append('image', imageFile);
+      }
 
       const request = this.isEdit && this.carId
         ? this.apiService.updateCar(this.carId, formData)
@@ -139,11 +161,20 @@ export class CarFormComponent implements OnInit {
         },
         error: (error: any) => {
           console.error('Error saving car:', error);
-          this.snackBar.open(
-            `Error al ${this.isEdit ? 'actualizar' : 'crear'} el auto`,
-            'Cerrar',
-            { duration: 3000 }
-          );
+          let errorMessage = `Error al ${this.isEdit ? 'actualizar' : 'crear'} el auto`;
+
+          if (error.error) {
+            if (typeof error.error === 'object') {
+              const errors = Object.values(error.error).flat();
+              if (errors.length > 0) {
+                errorMessage += `: ${errors.join(', ')}`;
+              }
+            } else if (typeof error.error === 'string') {
+              errorMessage += `: ${error.error}`;
+            }
+          }
+
+          this.snackBar.open(errorMessage, 'Cerrar', { duration: 5000 });
           this.isLoading = false;
         }
       });

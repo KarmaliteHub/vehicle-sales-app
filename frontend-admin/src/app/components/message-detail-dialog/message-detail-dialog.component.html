@@ -1,0 +1,86 @@
+<div class="message-detail-container">
+  <div class="message-detail-header">
+    <h2 mat-dialog-title>
+      <mat-icon>message</mat-icon>
+      Detalle del Mensaje
+    </h2>
+    <button mat-icon-button (click)="onClose(false)" class="close-button">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <mat-dialog-content>
+    <div class="message-info">
+      <div class="info-section">
+        <h3>Información del Cliente</h3>
+        <div class="info-grid">
+          <div class="info-item">
+            <mat-icon>person</mat-icon>
+            <div class="info-content">
+              <label>Nombre:</label>
+              <span>{{data.message.name}}</span>
+            </div>
+          </div>
+
+          <div class="info-item">
+            <mat-icon>email</mat-icon>
+            <div class="info-content">
+              <label>Email:</label>
+              <span>{{data.message.email}}</span>
+            </div>
+          </div>
+
+          <div class="info-item">
+            <mat-icon>phone</mat-icon>
+            <div class="info-content">
+              <label>Teléfono:</label>
+              <span>{{data.message.phone || 'No especificado'}}</span>
+            </div>
+          </div>
+
+          <div class="info-item">
+            <mat-icon>calendar_today</mat-icon>
+            <div class="info-content">
+              <label>Fecha:</label>
+              <span>{{data.message.date}}</span>
+            </div>
+          </div>
+
+          <div class="info-item">
+            <mat-icon>mark_email_read</mat-icon>
+            <div class="info-content">
+              <label>Estado:</label>
+              <span [class]="'status-badge ' + (data.message.is_read ? 'read' : 'unread')">
+                {{data.message.is_read ? 'Leído' : 'No leído'}}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <mat-divider></mat-divider>
+
+      <div class="message-section">
+        <h3>Mensaje</h3>
+        <div class="message-content">
+          {{data.message.message}}
+        </div>
+      </div>
+    </div>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button (click)="onClose(false)">
+      <mat-icon>close</mat-icon>
+      Cerrar
+    </button>
+    <button
+      *ngIf="!data.message.is_read"
+      mat-raised-button
+      color="primary"
+      (click)="onClose(true)">
+      <mat-icon>mark_email_read</mat-icon>
+      Marcar como leído
+    </button>
+  </mat-dialog-actions>
+</div>

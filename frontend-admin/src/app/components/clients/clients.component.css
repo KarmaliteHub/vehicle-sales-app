@@ -285,3 +285,45 @@
     font-size: 0.8rem;
   }
 }
+
+/* Estilos adicionales para la columna de estado */
+.status-badge {
+  padding: 4px 10px;
+  border-radius: 50px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  display: inline-block;
+  text-align: center;
+  min-width: 70px;
+}
+
+.status-badge.active {
+  background: rgba(76, 175, 80, 0.2);
+  color: #4caf50;
+  border: 1px solid rgba(76, 175, 80, 0.5);
+}
+
+.status-badge.inactive {
+  background: rgba(244, 67, 54, 0.2);
+  color: #f44336;
+  border: 1px solid rgba(244, 67, 54, 0.5);
+}
+
+/* Asegurar que el botón deshabilitado tenga estilo adecuado */
+button[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Mejorar la visualización en dispositivos móviles */
+@media (max-width: 768px) {
+  .displayed-messages-columns {
+    font-size: 0.8rem;
+  }
+
+  .status-badge {
+    min-width: 60px;
+    font-size: 0.7rem;
+    padding: 3px 6px;
+  }
+}

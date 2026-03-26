@@ -153,6 +153,29 @@ class ContactMessageDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = ContactMessage.objects.all()
     serializer_class = ContactMessageSerializer
     permission_classes = [permissions.IsAuthenticated]
+    
+    def update(self, request, *args, **kwargs):
+        """Actualizar mensaje de contacto (especialmente para marcar como leído)"""
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        
+        # Crear un diccionario con los datos a actualizar
+        update_data = {}
+        
+        # Si viene 'is_read' en los datos, actualizarlo
+        if 'is_read' in request.data:
+            update_data['is_read'] = request.data['is_read']
+        
+        # Si viene 'message' en los datos, actualizarlo también
+        if 'message' in request.data:
+            update_data['message'] = request.data['message']
+        
+        # Actualizar solo los campos proporcionados
+        serializer = self.get_serializer(instance, data=update_data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        
+        return Response(serializer.data)
 
 class SubscriberListCreateView(generics.ListCreateAPIView):
     queryset = Subscriber.objects.all().order_by('-subscription_date')
@@ -330,23 +353,25 @@ class SystemConfigurationViewSet(viewsets.ModelViewSet):
         for config_data in configurations_data:
             config_key = config_data.get('key')
             if config_key:
-                config, created = SystemConfiguration.objects.get_or_create(
-                    key=config_key,
-                    defaults={
-                        'value': config_data.get('value', {}),
-                        'category': config_data.get('category', 'general'),
-                        'description': config_data.get('description', ''),
-                        'updated_by': request.user
-                    }
-                )
-                if not created:
+                # Buscar por key, no por id
+                config = SystemConfiguration.objects.filter(key=config_key).first()
+                if config:
                     config.value = config_data.get('value', config.value)
                     config.category = config_data.get('category', config.category)
                     config.description = config_data.get('description', config.description)
                     config.updated_by = request.user
                     config.save()
-                
-                updated_configs.append(config)
+                    updated_configs.append(config)
+                else:
+                    # Si no existe, crearlo
+                    config = SystemConfiguration.objects.create(
+                        key=config_key,
+                        value=config_data.get('value', {}),
+                        category=config_data.get('category', 'general'),
+                        description=config_data.get('description', ''),
+                        updated_by=request.user
+                    )
+                    updated_configs.append(config)
         
         serializer = self.get_serializer(updated_configs, many=True)
         return Response(serializer.data)

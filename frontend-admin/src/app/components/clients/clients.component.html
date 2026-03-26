@@ -55,10 +55,22 @@
                     <mat-cell *matCellDef="let message">{{message.date}}</mat-cell>
                   </ng-container>
 
+                  <ng-container matColumnDef="status">
+                    <mat-header-cell *matHeaderCellDef>Estado</mat-header-cell>
+                    <mat-cell *matCellDef="let message">
+                      <span [class]="'status-badge ' + (message.is_read ? 'active' : 'inactive')">
+                        {{message.is_read ? 'Leído' : 'No leído'}}
+                      </span>
+                    </mat-cell>
+                  </ng-container>
+
                   <ng-container matColumnDef="actions">
                     <mat-header-cell *matHeaderCellDef>Acciones</mat-header-cell>
                     <mat-cell *matCellDef="let message">
-                      <button mat-icon-button color="primary" (click)="markAsRead(message)" matTooltip="Marcar como leído">
+                      <button mat-icon-button color="primary" (click)="viewMessageDetails(message)" matTooltip="Ver detalles del mensaje">
+                        <mat-icon>visibility</mat-icon>
+                      </button>
+                      <button mat-icon-button color="primary" (click)="markAsRead(message)" matTooltip="Marcar como leído" [disabled]="message.is_read">
                         <mat-icon>mark_email_read</mat-icon>
                       </button>
                       <button mat-icon-button color="warn" (click)="deleteMessage(message)" matTooltip="Eliminar mensaje">

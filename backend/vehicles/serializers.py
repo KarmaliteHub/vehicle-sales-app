@@ -33,6 +33,10 @@ class CarSerializer(serializers.ModelSerializer):
     class Meta:
         model = Car
         fields = '__all__'
+        extra_kwargs = {
+            'image': {'required': False},
+            'is_sold': {'required': False}
+        }
     
     def get_image_url(self, obj):
         if obj.image:
@@ -41,6 +45,17 @@ class CarSerializer(serializers.ModelSerializer):
                 return request.build_absolute_uri(obj.image.url)
             return obj.image.url
         return None
+    
+    def update(self, instance, validated_data):
+        # Manejar actualización de imagen
+        image = validated_data.pop('image', None)
+        if image:
+            instance.image = image
+        # Actualizar otros campos
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        return instance
 
 class MotorcycleSerializer(serializers.ModelSerializer):
     created_by = UserSerializer(read_only=True)
@@ -49,6 +64,10 @@ class MotorcycleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Motorcycle
         fields = '__all__'
+        extra_kwargs = {
+            'image': {'required': False},
+            'is_sold': {'required': False}
+        }
     
     def get_image_url(self, obj):
         if obj.image:
@@ -57,6 +76,17 @@ class MotorcycleSerializer(serializers.ModelSerializer):
                 return request.build_absolute_uri(obj.image.url)
             return obj.image.url
         return None
+    
+    def update(self, instance, validated_data):
+        # Manejar actualización de imagen
+        image = validated_data.pop('image', None)
+        if image:
+            instance.image = image
+        # Actualizar otros campos
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        return instance
 
 class FeaturedItemSerializer(serializers.ModelSerializer):
     type = serializers.SerializerMethodField()
@@ -73,7 +103,6 @@ class FeaturedItemSerializer(serializers.ModelSerializer):
         if obj.image_url:
             request = self.context.get('request')
             if request:
-                # Construir URL absoluta usando el path relativo almacenado
                 return request.build_absolute_uri('/media/' + obj.image_url)
             return '/media/' + obj.image_url
         return None
@@ -102,7 +131,6 @@ class DiscountSerializer(serializers.ModelSerializer):
         if obj.image_url:
             request = self.context.get('request')
             if request:
-                # Construir URL absoluta usando el path relativo almacenado
                 return request.build_absolute_uri('/media/' + obj.image_url)
             return '/media/' + obj.image_url
         return None
@@ -111,7 +139,7 @@ class ContactMessageSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContactMessage
         fields = '__all__'
-        read_only_fields = ['date', 'is_read']
+        read_only_fields = ['date']
 
 class SubscriberSerializer(serializers.ModelSerializer):
     class Meta:

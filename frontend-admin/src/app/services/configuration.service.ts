@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
-import { Observable, throwError, timer } from 'rxjs';
-import { retry, catchError, switchMap } from 'rxjs/operators';
+import { Observable, throwError, timer, of } from 'rxjs';
+import { retry, catchError, switchMap, map } from 'rxjs/operators';
 import { AuthService } from './auth.service';
 import { environment } from '../../environments/environment';
 
@@ -63,7 +63,7 @@ export interface ConfigurationResponse {
 export class ConfigurationService {
   private apiUrl = environment.apiUrl;
   private maxRetries = 3;
-  private retryDelay = 1000; // 1 segundo
+  private retryDelay = 1000;
 
   constructor(
     private http: HttpClient,
@@ -82,10 +82,8 @@ export class ConfigurationService {
     let errorMessage = 'Error desconocido';
 
     if (error.error instanceof ErrorEvent) {
-      // Error del lado del cliente
       errorMessage = `Error: ${error.error.message}`;
     } else {
-      // Error del lado del servidor
       switch (error.status) {
         case 0:
           errorMessage = 'No se pudo conectar con el servidor. Verifica tu conexión a internet.';
@@ -120,7 +118,6 @@ export class ConfigurationService {
         count: this.maxRetries,
         delay: (error, retryCount) => {
           if (error.status === 0 || error.status >= 500) {
-            // Solo reintentar para errores de conexión o del servidor
             return timer(this.retryDelay * retryCount);
           }
           return throwError(() => error);
@@ -140,11 +137,16 @@ export class ConfigurationService {
   }
 
   // Obtener configuraciones por categoría
-  getConfigurationsByCategory(category: string): Observable<ConfigurationResponse> {
+  getConfigurationsByCategory(category: string): Observable<SystemConfiguration[]> {
     return this.retryWithBackoff(
-      this.http.get<ConfigurationResponse>(`${this.apiUrl}/configurations/by_category/`, {
+      this.http.get<SystemConfiguration[]>(`${this.apiUrl}/configurations/by_category/`, {
         headers: this.getHeaders(),
         params: { category }
+      })
+    ).pipe(
+      map(response => {
+        // La API devuelve directamente el array, no un objeto con results
+        return Array.isArray(response) ? response : (response as any).results || [];
       })
     );
   }
@@ -201,26 +203,25 @@ export class ConfigurationService {
   // Configuraciones generales
   getGeneralSettings(): Observable<GeneralSettings> {
     return this.getConfigurationsByCategory('general').pipe(
-      switchMap(response => {
+      map((configs: SystemConfiguration[]) => {
         const settings: GeneralSettings = {
-          companyName: '',
-          email: '',
-          phone: '',
-          address: '',
+          companyName: 'KARMALITE Motors',
+          email: 'info@karmalite.com',
+          phone: '+1 (555) 123-4567',
+          address: '123 Automotive Ave, Detroit, MI',
           currency: 'USD',
           timezone: 'America/New_York'
         };
 
-        response.results.forEach(config => {
-          if (config.key in settings) {
-            (settings as any)[config.key] = config.value;
-          }
-        });
+        if (configs && Array.isArray(configs)) {
+          configs.forEach(config => {
+            if (config.key && config.key in settings) {
+              (settings as any)[config.key] = config.value;
+            }
+          });
+        }
 
-        return new Observable<GeneralSettings>(observer => {
-          observer.next(settings);
-          observer.complete();
-        });
+        return settings;
       })
     );
   }
@@ -239,7 +240,7 @@ export class ConfigurationService {
   // Configuraciones de apariencia
   getAppearanceSettings(): Observable<AppearanceSettings> {
     return this.getConfigurationsByCategory('appearance').pipe(
-      switchMap(response => {
+      map((configs: SystemConfiguration[]) => {
         const settings: AppearanceSettings = {
           theme: 'dark',
           primaryColor: '#ff7700',
@@ -247,23 +248,22 @@ export class ConfigurationService {
           font: 'Roboto'
         };
 
-        response.results.forEach(config => {
-          if (config.key in settings) {
-            (settings as any)[config.key] = config.value;
-          }
-        });
+        if (configs && Array.isArray(configs)) {
+          configs.forEach(config => {
+            if (config.key && config.key in settings) {
+              (settings as any)[config.key] = config.value;
+            }
+          });
+        }
 
-        return new Observable<AppearanceSettings>(observer => {
-          observer.next(settings);
-          observer.complete();
-        });
+        return settings;
       })
     );
   }
 
   saveAppearanceSettings(settings: AppearanceSettings): Observable<any> {
     const configurations = Object.entries(settings)
-      .filter(([key]) => key !== 'logo') // El logo se maneja por separado
+      .filter(([key]) => key !== 'logo')
       .map(([key, value]) => ({
         key,
         value,
@@ -277,7 +277,7 @@ export class ConfigurationService {
   // Configuraciones de notificaciones
   getNotificationSettings(): Observable<NotificationSettings> {
     return this.getConfigurationsByCategory('notifications').pipe(
-      switchMap(response => {
+      map((configs: SystemConfiguration[]) => {
         const settings: NotificationSettings = {
           emailNotifications: true,
           salesNotifications: true,
@@ -286,16 +286,15 @@ export class ConfigurationService {
           securityNotifications: true
         };
 
-        response.results.forEach(config => {
-          if (config.key in settings) {
-            (settings as any)[config.key] = config.value;
-          }
-        });
+        if (configs && Array.isArray(configs)) {
+          configs.forEach(config => {
+            if (config.key && config.key in settings) {
+              (settings as any)[config.key] = config.value;
+            }
+          });
+        }
 
-        return new Observable<NotificationSettings>(observer => {
-          observer.next(settings);
-          observer.complete();
-        });
+        return settings;
       })
     );
   }
@@ -314,7 +313,7 @@ export class ConfigurationService {
   // Configuraciones de seguridad
   getSecuritySettings(): Observable<SecuritySettings> {
     return this.getConfigurationsByCategory('security').pipe(
-      switchMap(response => {
+      map((configs: SystemConfiguration[]) => {
         const settings: SecuritySettings = {
           twoFactorAuth: false,
           sessionTimeout: 30,
@@ -322,16 +321,15 @@ export class ConfigurationService {
           loginAttempts: 5
         };
 
-        response.results.forEach(config => {
-          if (config.key in settings) {
-            (settings as any)[config.key] = config.value;
-          }
-        });
+        if (configs && Array.isArray(configs)) {
+          configs.forEach(config => {
+            if (config.key && config.key in settings) {
+              (settings as any)[config.key] = config.value;
+            }
+          });
+        }
 
-        return new Observable<SecuritySettings>(observer => {
-          observer.next(settings);
-          observer.complete();
-        });
+        return settings;
       })
     );
   }

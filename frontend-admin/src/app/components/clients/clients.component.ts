@@ -4,6 +4,7 @@ import { AuthService } from '../../services/auth.service';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
+import { MessageDetailDialogComponent } from '../message-detail-dialog/message-detail-dialog.component';
 import { CommonModule } from '@angular/common';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTableModule } from '@angular/material/table';
@@ -33,7 +34,7 @@ export class ClientsComponent implements OnInit {
   users: any[] = [];
   subscribers: any[] = [];
 
-  displayedMessagesColumns: string[] = ['name', 'email', 'phone', 'message', 'date', 'actions'];
+  displayedMessagesColumns: string[] = ['name', 'email', 'phone', 'message', 'date', 'status', 'actions'];
   displayedUsersColumns: string[] = ['username', 'email', 'registration_date', 'status', 'actions'];
   displayedSubscribersColumns: string[] = ['email', 'subscription_date', 'actions'];
 
@@ -63,7 +64,13 @@ export class ClientsComponent implements OnInit {
           email: message.email,
           phone: message.phone,
           message: message.message,
-          date: new Date(message.date).toLocaleDateString('es-ES'),
+          date: new Date(message.date).toLocaleDateString('es-ES', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          }),
           is_read: message.is_read
         }));
       },
@@ -96,7 +103,11 @@ export class ClientsComponent implements OnInit {
         this.subscribers = subscribers.map(subscriber => ({
           id: subscriber.id,
           email: subscriber.email,
-          subscription_date: new Date(subscriber.subscription_date).toLocaleDateString('es-ES'),
+          subscription_date: new Date(subscriber.subscription_date).toLocaleDateString('es-ES', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          }),
           is_active: subscriber.is_active
         }));
         this.isLoading = false;
@@ -109,12 +120,28 @@ export class ClientsComponent implements OnInit {
     });
   }
 
+  viewMessageDetails(message: any): void {
+    const dialogRef = this.dialog.open(MessageDetailDialogComponent, {
+      width: '600px',
+      maxWidth: '90vw',
+      data: {
+        message: message
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result && result.markAsRead && !message.is_read) {
+        this.markAsRead(message);
+      }
+    });
+  }
+
   deleteMessage(message: any): void {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '400px',
       data: {
         title: 'Confirmar Eliminación',
-        message: `¿Estás seguro de que quieres eliminar el mensaje de ${message.name}?`
+        message: `¿Estás seguro de que quieres eliminar el mensaje de ${message.name}? Esta acción no se puede deshacer.`
       }
     });
 
@@ -205,7 +232,7 @@ export class ClientsComponent implements OnInit {
   }
 
   private exportMessages(): void {
-    const csvContent = this.convertToCSV(this.messages, ['name', 'email', 'phone', 'message', 'date']);
+    const csvContent = this.convertToCSV(this.messages, ['name', 'email', 'phone', 'message', 'date', 'status']);
     this.downloadCSV(csvContent, 'mensajes_contacto.csv');
     this.snackBar.open('Mensajes exportados correctamente', 'Cerrar', { duration: 3000 });
   }

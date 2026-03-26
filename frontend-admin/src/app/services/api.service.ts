@@ -219,12 +219,14 @@ export class ApiService {
   }
 
   updateContactMessage(id: number, data: any): Observable<any> {
+    // Usar PATCH para actualizaciones parciales
     return this.http.patch(`${this.apiUrl}/contact-messages/${id}/`, data, { headers: this.getHeaders() });
   }
 
   deleteContactMessage(id: number): Observable<any> {
     return this.http.delete(`${this.apiUrl}/contact-messages/${id}/`, { headers: this.getHeaders() });
   }
+
 
   // Subscribers
   getSubscribers(): Observable<any> {
