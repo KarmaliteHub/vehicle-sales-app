@@ -4,7 +4,7 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.decorators import api_view, permission_classes, action
 from django.contrib.auth.models import User
 from django.db.models import Q
-from .models import Car, Motorcycle, ContactMessage, Subscriber, FeaturedItem, Discount, SystemConfiguration, SystemLog
+from .models import Car, Motorcycle, ContactMessage, Subscriber, FeaturedItem, Discount, SystemConfiguration, SystemLog, SiteLogo
 from .serializers import (
     CarSerializer, 
     MotorcycleSerializer, 
@@ -14,7 +14,8 @@ from .serializers import (
     FeaturedItemSerializer,
     DiscountSerializer,
     SystemConfigurationSerializer,
-    SystemLogSerializer
+    SystemLogSerializer,
+    SiteLogoSerializer
 )
 from rest_framework_simplejwt.tokens import RefreshToken
 import csv
@@ -84,6 +85,23 @@ class CarDetailView(generics.RetrieveUpdateDestroyAPIView):
         context = super().get_serializer_context()
         context['request'] = self.request
         return context
+    
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        
+        # Guardar estado anterior
+        was_sold = instance.is_sold
+        
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        
+        # Si el estado cambió a vendido, enviar notificación
+        if not was_sold and instance.is_sold:
+            send_vehicle_sold_notification(instance, 'car', request.user)
+        
+        return Response(serializer.data)
 
 class MotorcycleListCreateView(generics.ListCreateAPIView):
     queryset = Motorcycle.objects.all().order_by('-created_at')
@@ -106,6 +124,23 @@ class MotorcycleDetailView(generics.RetrieveUpdateDestroyAPIView):
         context = super().get_serializer_context()
         context['request'] = self.request
         return context
+    
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        
+        # Guardar estado anterior
+        was_sold = instance.is_sold
+        
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        
+        # Si el estado cambió a vendido, enviar notificación
+        if not was_sold and instance.is_sold:
+            send_vehicle_sold_notification(instance, 'motorcycle', request.user)
+        
+        return Response(serializer.data)
 
 class SearchView(generics.ListAPIView):
     serializer_class = CarSerializer
@@ -392,3 +427,143 @@ class SystemLogViewSet(viewsets.ReadOnlyModelViewSet):
             queryset = queryset.filter(module=module)
             
         return queryset.order_by('-timestamp')
+
+
+class SiteLogoViewSet(viewsets.ModelViewSet):
+    queryset = SiteLogo.objects.filter(is_active=True)
+    serializer_class = SiteLogoSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_queryset(self):
+        return SiteLogo.objects.filter(is_active=True).order_by('-uploaded_at')
+    
+    def perform_create(self, serializer):
+        # Desactivar logos anteriores
+        SiteLogo.objects.filter(is_active=True).update(is_active=False)
+        serializer.save(uploaded_by=self.request.user)
+    
+    def perform_update(self, serializer):
+        serializer.save(uploaded_by=self.request.user)
+
+# Agregar función para enviar notificaciones
+def send_vehicle_sold_notification(vehicle, vehicle_type, user=None):
+    """Envía notificaciones cuando un vehículo es marcado como vendido"""
+    try:
+        # Obtener configuraciones
+        email_notifications = SystemConfiguration.objects.filter(
+            key='email_notifications', 
+            is_active=True
+        ).first()
+        
+        sales_notifications = SystemConfiguration.objects.filter(
+            key='sales_notifications',
+            is_active=True
+        ).first()
+        
+        if not email_notifications or not email_notifications.value.get('enabled', False):
+            return
+        
+        if not sales_notifications or not sales_notifications.value.get('enabled', False):
+            return
+        
+        # Obtener email de contacto
+        contact_email_config = SystemConfiguration.objects.filter(
+            key='contact_email',
+            is_active=True
+        ).first()
+        
+        to_email = contact_email_config.value.get('email') if contact_email_config else settings.DEFAULT_FROM_EMAIL
+        
+        # Preparar asunto y mensaje
+        subject = f'Vehículo Vendido: {vehicle.title}'
+        
+        context = {
+            'vehicle': vehicle,
+            'vehicle_type': vehicle_type,
+            'user': user,
+            'title': vehicle.title,
+            'price': vehicle.price,
+            'brand': vehicle.brand,
+            'model': vehicle.model,
+            'year': vehicle.year,
+            'date': timezone.now()
+        }
+        
+        html_message = render_to_string('emails/vehicle_sold.html', context)
+        plain_message = strip_tags(html_message)
+        
+        send_mail(
+            subject,
+            plain_message,
+            settings.DEFAULT_FROM_EMAIL,
+            [to_email],
+            html_message=html_message,
+            fail_silently=False
+        )
+        
+        # Registrar en logs
+        SystemLog.objects.create(
+            level='INFO',
+            message=f'Notificación de venta enviada para {vehicle.title}',
+            module='vehicles.views',
+            user=user,
+            extra_data={'vehicle_id': vehicle.id, 'vehicle_type': vehicle_type}
+        )
+        
+    except Exception as e:
+        SystemLog.objects.create(
+            level='ERROR',
+            message=f'Error al enviar notificación de venta: {str(e)}',
+            module='vehicles.views',
+            user=user,
+            extra_data={'vehicle_id': vehicle.id, 'vehicle_type': vehicle_type}
+        )
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def send_test_notification(request):
+    """Endpoint para probar notificaciones"""
+    try:
+        # Obtener configuraciones
+        email_notifications = SystemConfiguration.objects.filter(
+            key='email_notifications', 
+            is_active=True
+        ).first()
+        
+        sales_notifications = SystemConfiguration.objects.filter(
+            key='sales_notifications',
+            is_active=True
+        ).first()
+        
+        if not email_notifications or not email_notifications.value.get('enabled', False):
+            return Response({
+                'error': 'Notificaciones por email desactivadas'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        if not sales_notifications or not sales_notifications.value.get('enabled', False):
+            return Response({
+                'error': 'Notificaciones de ventas desactivadas'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Obtener email de contacto
+        contact_email_config = SystemConfiguration.objects.filter(
+            key='contact_email',
+            is_active=True
+        ).first()
+        
+        to_email = contact_email_config.value.get('email') if contact_email_config else settings.DEFAULT_FROM_EMAIL
+        
+        send_mail(
+            'Prueba de Notificación - KARMALITE',
+            'Esta es una notificación de prueba para verificar que el sistema de correos funciona correctamente.',
+            settings.DEFAULT_FROM_EMAIL,
+            [to_email],
+            fail_silently=False
+        )
+        
+        return Response({'message': 'Notificación de prueba enviada correctamente'})
+        
+    except Exception as e:
+        return Response({
+            'error': f'Error al enviar notificación: {str(e)}'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

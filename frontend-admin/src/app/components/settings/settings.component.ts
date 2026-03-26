@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Renderer2 } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -48,6 +48,7 @@ export class SettingsComponent implements OnInit {
   securityForm: FormGroup;
   selectedFile: File | null = null;
   previewUrl: string | ArrayBuffer | null = null;
+  currentLogoUrl: string | null = null;
 
   // Estados de carga
   isLoadingGeneral = false;
@@ -60,12 +61,14 @@ export class SettingsComponent implements OnInit {
   isSavingAppearance = false;
   isSavingNotifications = false;
   isSavingSecurity = false;
+  isUploadingLogo = false;
 
   constructor(
     private fb: FormBuilder,
     private snackBar: MatSnackBar,
     private apiService: ApiService,
-    private configurationService: ConfigurationService
+    private configurationService: ConfigurationService,
+    private renderer: Renderer2
   ) {
     this.generalForm = this.fb.group({
       companyName: ['KARMALITE Motors', Validators.required],
@@ -80,8 +83,7 @@ export class SettingsComponent implements OnInit {
       theme: ['dark', Validators.required],
       primaryColor: ['#ff7700', Validators.required],
       secondaryColor: ['#ffd700', Validators.required],
-      font: ['Roboto', Validators.required],
-      logo: ['']
+      font: ['Roboto', Validators.required]
     });
 
     this.notificationsForm = this.fb.group({
@@ -102,6 +104,206 @@ export class SettingsComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadAllSettings();
+    this.loadCurrentLogo();
+    this.subscribeToThemeChanges();
+    this.applyColorStyles();
+  }
+
+  loadCurrentLogo(): void {
+    this.configurationService.loadLogo();
+    this.configurationService.logoUrl$.subscribe(url => {
+      this.currentLogoUrl = url;
+    });
+  }
+
+  subscribeToThemeChanges(): void {
+    this.appearanceForm.get('primaryColor')?.valueChanges.subscribe(() => {
+      this.applyColorStyles();
+    });
+    this.appearanceForm.get('secondaryColor')?.valueChanges.subscribe(() => {
+      this.applyColorStyles();
+    });
+  }
+
+  applyColorStyles(): void {
+    const primaryColor = this.appearanceForm.get('primaryColor')?.value || '#ff7700';
+    const secondaryColor = this.appearanceForm.get('secondaryColor')?.value || '#ffd700';
+
+    // Crear o obtener el elemento style
+    const styleId = 'dynamic-theme-styles';
+    let styleElement = document.getElementById(styleId) as HTMLStyleElement | null;
+
+    if (!styleElement) {
+      styleElement = this.renderer.createElement('style') as HTMLStyleElement;
+      styleElement.id = styleId;
+      this.renderer.appendChild(document.head, styleElement);
+    }
+
+    // Ahora styleElement definitivamente no es null porque lo hemos creado si no existía
+    // Generar CSS dinámico
+    const css = `
+      /* Variables CSS globales */
+      :root {
+        --primary-color: ${primaryColor};
+        --primary-color-rgb: ${this.hexToRgb(primaryColor)};
+        --secondary-color: ${secondaryColor};
+        --secondary-color-rgb: ${this.hexToRgb(secondaryColor)};
+      }
+
+      /* Botones principales */
+      .mat-mdc-raised-button.mat-primary {
+        background: linear-gradient(45deg, var(--primary-color), ${this.adjustColor(primaryColor, -20)}) !important;
+      }
+
+      .mat-mdc-raised-button.mat-primary:hover {
+        background: linear-gradient(45deg, ${this.adjustColor(primaryColor, 20)}, var(--primary-color)) !important;
+      }
+
+      /* Texto con color primario */
+      .mat-mdc-header-cell {
+        color: var(--primary-color) !important;
+      }
+
+      /* Bordes y acentos */
+      .mat-mdc-tab .mdc-tab-indicator__content--underline {
+        border-color: var(--primary-color) !important;
+      }
+
+      .mat-mdc-tab-header-pagination-chevron {
+        border-color: var(--primary-color);
+      }
+
+      /* Iconos y elementos interactivos */
+      .mat-icon, .mat-mdc-icon-button {
+        color: var(--primary-color);
+      }
+
+      /* Links y elementos destacados */
+      a, .link-text {
+        color: var(--primary-color);
+      }
+
+      a:hover, .link-text:hover {
+        color: ${this.adjustColor(primaryColor, 20)};
+      }
+
+      /* Botones de acción */
+      .add-button, .save-button {
+        background: linear-gradient(45deg, var(--primary-color), ${this.adjustColor(primaryColor, -20)}) !important;
+      }
+
+      .add-button:hover, .save-button:hover {
+        background: linear-gradient(45deg, ${this.adjustColor(primaryColor, 20)}, var(--primary-color)) !important;
+      }
+
+      /* Elementos destacados en tarjetas */
+      .stat-card::before {
+        background: linear-gradient(45deg, var(--primary-color), var(--secondary-color), var(--primary-color));
+      }
+
+      .stat-icon {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 15px rgba(var(--primary-color-rgb), 0.3);
+      }
+
+      .stat-card:hover .stat-icon {
+        box-shadow: 0 0 20px rgba(var(--primary-color-rgb), 0.5);
+      }
+
+      /* Spinners y elementos de carga */
+      .mat-mdc-progress-spinner circle, .mat-mdc-spinner circle {
+        stroke: var(--primary-color) !important;
+      }
+
+      /* Sliders y toggles */
+      .mat-mdc-slide-toggle.mat-primary .mdc-switch__track::after {
+        background-color: var(--primary-color) !important;
+      }
+
+      .mat-mdc-slide-toggle.mat-primary .mdc-switch__handle::after {
+        background-color: var(--primary-color) !important;
+      }
+
+      /* Checkboxes */
+      .mat-mdc-checkbox.mat-primary .mdc-checkbox__background {
+        border-color: var(--primary-color) !important;
+      }
+
+      .mat-mdc-checkbox.mat-primary .mdc-checkbox__checkmark {
+        color: var(--primary-color) !important;
+      }
+
+      /* Tablas */
+      .mat-mdc-row:hover {
+        background: rgba(var(--primary-color-rgb), 0.05) !important;
+      }
+
+      /* Barras de progreso */
+      .mat-mdc-progress-bar .mdc-linear-progress__bar-inner {
+        background-color: var(--primary-color) !important;
+      }
+
+      /* Scrollbar personalizado */
+      ::-webkit-scrollbar-thumb {
+        background: var(--primary-color);
+      }
+
+      ::-webkit-scrollbar-thumb:hover {
+        background: ${this.adjustColor(primaryColor, 20)};
+      }
+
+      /* Borde inferior de títulos */
+      .dashboard-container h1::after,
+      .cars-container h1::after,
+      .settings-container h1::after {
+        background: linear-gradient(90deg, transparent, var(--primary-color), transparent);
+      }
+
+      /* Menú lateral activo */
+      .mat-list-item.active {
+        border-left: 4px solid var(--primary-color);
+      }
+
+      .mat-list-item.active .mat-icon {
+        color: var(--primary-color) !important;
+      }
+
+      /* Toolbar */
+      .mat-toolbar.mat-primary {
+        background: linear-gradient(90deg, #1a1a1a, var(--primary-color)) !important;
+      }
+    `;
+
+    styleElement.textContent = css;
+
+    // Aplicar fuente
+    const font = this.appearanceForm.get('font')?.value || 'Roboto';
+    document.body.style.fontFamily = `${font}, sans-serif`;
+  }
+
+  private hexToRgb(hex: string): string {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    if (result) {
+      return `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}`;
+    }
+    return '255, 119, 0';
+  }
+
+  private adjustColor(hex: string, percent: number): string {
+    let r: number, g: number, b: number;
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    if (result) {
+      r = parseInt(result[1], 16);
+      g = parseInt(result[2], 16);
+      b = parseInt(result[3], 16);
+
+      r = Math.min(255, Math.max(0, r + (r * percent / 100)));
+      g = Math.min(255, Math.max(0, g + (g * percent / 100)));
+      b = Math.min(255, Math.max(0, b + (b * percent / 100)));
+
+      return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+    }
+    return hex;
   }
 
   loadAllSettings(): void {
@@ -132,6 +334,7 @@ export class SettingsComponent implements OnInit {
       next: (settings: AppearanceSettings) => {
         this.appearanceForm.patchValue(settings);
         this.applyThemeChanges(settings.theme);
+        this.applyColorStyles();
         this.isLoadingAppearance = false;
       },
       error: (error) => {
@@ -173,12 +376,10 @@ export class SettingsComponent implements OnInit {
   }
 
   private applyThemeChanges(theme: string): void {
-    // Aplicar cambios de tema inmediatamente
     const body = document.body;
     body.classList.remove('light-theme', 'dark-theme');
 
     if (theme === 'auto') {
-      // Detectar preferencia del sistema
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
       body.classList.add(prefersDark ? 'dark-theme' : 'light-theme');
     } else {
@@ -203,25 +404,51 @@ export class SettingsComponent implements OnInit {
 
   onFileSelected(event: any): void {
     const file = event.target.files[0];
-    if (file) {
+    if (file && this.isValidImageFile(file)) {
       this.selectedFile = file;
-
-      // Crear preview
       const reader = new FileReader();
       reader.onload = () => {
         this.previewUrl = reader.result;
       };
       reader.readAsDataURL(file);
+    } else {
+      this.showErrorMessage('Archivo inválido', 'Solo se permiten imágenes JPG, PNG o SVG de hasta 2MB');
     }
   }
 
+  private isValidImageFile(file: File): boolean {
+    const validTypes = ['image/jpeg', 'image/png', 'image/svg+xml', 'image/webp'];
+    const maxSize = 2 * 1024 * 1024; // 2MB
+
+    if (!validTypes.includes(file.type)) {
+      return false;
+    }
+
+    if (file.size > maxSize) {
+      return false;
+    }
+
+    return true;
+  }
+
   uploadLogo(): void {
-    if (this.selectedFile) {
-      // Simular subida de archivo
-      setTimeout(() => {
-        this.snackBar.open('Logo actualizado correctamente', 'Cerrar', { duration: 3000 });
-        this.selectedFile = null;
-      }, 1000);
+    if (this.selectedFile && !this.isUploadingLogo) {
+      this.isUploadingLogo = true;
+
+      this.apiService.uploadLogo(this.selectedFile).subscribe({
+        next: (response) => {
+          this.showSuccessMessage('Logo actualizado correctamente');
+          this.configurationService.loadLogo();
+          this.selectedFile = null;
+          this.previewUrl = null;
+          this.isUploadingLogo = false;
+        },
+        error: (error) => {
+          console.error('Error uploading logo:', error);
+          this.showErrorMessage('Error al subir el logo', error.message);
+          this.isUploadingLogo = false;
+        }
+      });
     }
   }
 
@@ -233,7 +460,6 @@ export class SettingsComponent implements OnInit {
       this.configurationService.saveGeneralSettings(settings).subscribe({
         next: () => {
           this.showSuccessMessage('Configuración general guardada correctamente');
-          // Recargar los settings para asegurar consistencia
           this.loadGeneralSettings();
           this.isSavingGeneral = false;
         },
@@ -254,6 +480,7 @@ export class SettingsComponent implements OnInit {
       const settings: AppearanceSettings = this.appearanceForm.value;
 
       this.applyThemeChanges(settings.theme);
+      this.applyColorStyles();
 
       this.configurationService.saveAppearanceSettings(settings).subscribe({
         next: () => {
@@ -290,6 +517,18 @@ export class SettingsComponent implements OnInit {
         }
       });
     }
+  }
+
+  sendTestNotification(): void {
+    this.apiService.sendTestNotification().subscribe({
+      next: () => {
+        this.showSuccessMessage('Notificación de prueba enviada correctamente');
+      },
+      error: (error) => {
+        console.error('Error sending test notification:', error);
+        this.showErrorMessage('Error al enviar notificación de prueba', error.error?.error);
+      }
+    });
   }
 
   saveSecuritySettings(): void {
@@ -334,7 +573,6 @@ export class SettingsComponent implements OnInit {
 
   resetSettings(): void {
     if (confirm('¿Estás seguro de que quieres restablecer todas las configuraciones a sus valores predeterminados?')) {
-      // Restablecer formularios a valores por defecto
       this.generalForm.reset({
         companyName: 'KARMALITE Motors',
         email: 'info@karmalite.com',
@@ -348,8 +586,7 @@ export class SettingsComponent implements OnInit {
         theme: 'dark',
         primaryColor: '#ff7700',
         secondaryColor: '#ffd700',
-        font: 'Roboto',
-        logo: ''
+        font: 'Roboto'
       });
 
       this.notificationsForm.reset({
@@ -370,8 +607,8 @@ export class SettingsComponent implements OnInit {
       this.previewUrl = null;
       this.selectedFile = null;
 
-      // Aplicar tema por defecto
       this.applyThemeChanges('dark');
+      this.applyColorStyles();
 
       this.showSuccessMessage('Configuraciones restablecidas a valores por defecto');
     }

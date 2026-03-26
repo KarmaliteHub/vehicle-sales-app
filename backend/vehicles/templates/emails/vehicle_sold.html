@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #ff7700, #ff5500);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .content {
+            padding: 30px;
+        }
+        .vehicle-details {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .vehicle-details p {
+            margin: 10px 0;
+            font-size: 16px;
+        }
+        .vehicle-details strong {
+            color: #ff7700;
+        }
+        .footer {
+            background: #f4f4f4;
+            padding: 20px;
+            text-align: center;
+            color: #666;
+            font-size: 12px;
+        }
+        .price {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ff7700;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>¡Vehículo Vendido!</h1>
+        </div>
+        <div class="content">
+            <h2>Hola,</h2>
+            <p>Se ha registrado una nueva venta en el sistema:</p>
+            
+            <div class="vehicle-details">
+                <p><strong>Vehículo:</strong> {{ title }}</p>
+                <p><strong>Tipo:</strong> {{ vehicle_type|title }}</p>
+                <p><strong>Marca:</strong> {{ brand }}</p>
+                <p><strong>Modelo:</strong> {{ model }}</p>
+                <p><strong>Año:</strong> {{ year }}</p>
+                <p class="price"><strong>Precio:</strong> ${{ price }}</p>
+                <p><strong>Fecha de venta:</strong> {{ date|date:"d/m/Y H:i" }}</p>
+            </div>
+            
+            {% if user %}
+            <p><strong>Vendido por:</strong> {{ user.username }}</p>
+            {% endif %}
+            
+            <p>Este es un mensaje automático del sistema KARMALITE.</p>
+        </div>
+        <div class="footer">
+            <p>KARMALITE Motors - Sistema de Gestión de Ventas</p>
+            <p>© 2024 Todos los derechos reservados</p>
+        </div>
+    </div>
+</body>
+</html>

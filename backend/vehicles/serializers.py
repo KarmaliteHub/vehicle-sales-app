@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Car, Motorcycle, ContactMessage, Subscriber, FeaturedItem, Discount, SystemConfiguration, SystemLog
+from .models import Car, Motorcycle, ContactMessage, Subscriber, FeaturedItem, Discount, SystemConfiguration, SystemLog, SiteLogo  # Añadir SiteLogo
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -146,3 +146,20 @@ class SubscriberSerializer(serializers.ModelSerializer):
         model = Subscriber
         fields = '__all__'
         read_only_fields = ['subscription_date']
+
+class SiteLogoSerializer(serializers.ModelSerializer):
+    uploaded_by = UserSerializer(read_only=True)
+    logo_url = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = SiteLogo
+        fields = ['id', 'logo', 'logo_url', 'uploaded_at', 'uploaded_by', 'is_active']
+        read_only_fields = ['uploaded_at', 'uploaded_by']
+    
+    def get_logo_url(self, obj):
+        if obj.logo:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.logo.url)
+            return obj.logo.url
+        return None

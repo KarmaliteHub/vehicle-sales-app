@@ -236,3 +236,18 @@ class SystemLog(models.Model):
         
     def __str__(self):
         return f"{self.level} - {self.module} - {self.timestamp.strftime('%Y-%m-%d %H:%M')}"
+
+class SiteLogo(models.Model):
+    """Modelo para almacenar el logo del sitio"""
+    logo = models.ImageField(upload_to='logos/', null=True, blank=True)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    uploaded_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    is_active = models.BooleanField(default=True)
+    
+    class Meta:
+        ordering = ['-uploaded_at']
+        verbose_name = 'Logo del Sitio'
+        verbose_name_plural = 'Logos del Sitio'
+    
+    def __str__(self):
+        return f"Logo {self.uploaded_at.strftime('%Y-%m-%d %H:%M')}"

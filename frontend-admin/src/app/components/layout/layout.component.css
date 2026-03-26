@@ -11,9 +11,22 @@
   z-index: 2;
 }
 
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: 10px;
+}
+
+.toolbar-logo {
+  height: 35px;
+  width: auto;
+  object-fit: contain;
+}
+
 .toolbar-title {
   font-weight: bold;
-  margin-left: 10px;
+  font-size: 1.2rem;
 }
 
 .spacer {
@@ -31,23 +44,36 @@
 .sidenav {
   background: #1a1a1a;
   color: white;
-  width: 250px;
+  width: 280px;
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
 }
 
-.sidenav-content {
-  padding: 0;
+.sidenav-header {
+  padding: 20px;
+  background: linear-gradient(135deg, #ff7700, #ff5500);
+  text-align: center;
 }
 
-.sidenav-header {
-  padding: 16px;
-  background: #ff7700;
-  color: white;
+.sidenav-logo-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.sidenav-logo {
+  max-width: 150px;
+  max-height: 60px;
+  object-fit: contain;
 }
 
 .sidenav-header h2 {
   margin: 0;
   font-size: 1.2rem;
+  color: white;
+}
+
+.sidenav-content {
+  padding: 0;
 }
 
 .mat-nav-list {
@@ -75,7 +101,7 @@
 
 .submenu {
   background: #252525;
-  padding-left: 40px;
+  padding-left: 48px;
 }
 
 .submenu .mat-list-item {
@@ -85,6 +111,8 @@
 .content {
   padding: 20px;
   background: #f5f5f5;
+  min-height: calc(100vh - 64px);
+  overflow-y: auto;
 }
 
 .expand-icon {
@@ -92,4 +120,45 @@
   font-size: 18px;
   height: 18px;
   width: 18px;
+}
+
+/* Dark theme */
+.dark-theme .content {
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+}
+
+/* Light theme */
+.light-theme .content {
+  background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
+}
+
+.light-theme .sidenav {
+  background: #ffffff;
+  color: #333;
+}
+
+.light-theme .mat-list-item {
+  color: #666 !important;
+}
+
+.light-theme .mat-list-item.active {
+  background: #f0f0f0 !important;
+}
+
+.light-theme .submenu {
+  background: #f9f9f9;
+}
+
+@media (max-width: 768px) {
+  .sidenav {
+    width: 240px;
+  }
+
+  .toolbar-title {
+    font-size: 1rem;
+  }
+
+  .toolbar-logo {
+    height: 30px;
+  }
 }

@@ -7,6 +7,7 @@ from . import views
 router = DefaultRouter()
 router.register(r'configurations', views.SystemConfigurationViewSet)
 router.register(r'system-logs', views.SystemLogViewSet)
+router.register(r'site-logo', views.SiteLogoViewSet)  # Añadir esta línea
 
 urlpatterns = [
     path('register/', views.UserRegistrationView.as_view(), name='register'),
@@ -41,6 +42,9 @@ urlpatterns = [
     path('discounts/<int:pk>/', views.DiscountDetailView.as_view(), name='discount-detail'),
     path('available-cars-discount/', views.AvailableCarsForDiscountListView.as_view(), name='available-cars-discount'),
     path('available-motorcycles-discount/', views.AvailableMotorcyclesForDiscountListView.as_view(), name='available-motorcycles-discount'),
+    
+    # Test notification
+    path('send-test-notification/', views.send_test_notification, name='send-test-notification'),
     
     # Include router URLs for ViewSets
     path('', include(router.urls)),

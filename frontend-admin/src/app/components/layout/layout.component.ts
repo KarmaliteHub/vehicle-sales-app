@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { AuthService } from '../../services/auth.service';
+import { ConfigurationService } from '../../services/configuration.service';
 import { RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { MatToolbarModule } from '@angular/material/toolbar';
@@ -24,9 +25,11 @@ import { MatMenuModule } from '@angular/material/menu';
     MatMenuModule
   ]
 })
-export class LayoutComponent {
+export class LayoutComponent implements OnInit {
   isSidenavOpen = true;
   marketingMenuOpen = false;
+  companyName = 'KARMALITE';
+  logoUrl: string | null = null;
 
   menuItems = [
     { name: 'Dashboard', icon: 'dashboard', route: '/dashboard' },
@@ -44,7 +47,33 @@ export class LayoutComponent {
     { name: 'Configuraciones', icon: 'settings', route: '/settings' }
   ];
 
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private configurationService: ConfigurationService
+  ) {}
+
+  ngOnInit(): void {
+    this.loadCompanyName();
+    this.loadLogo();
+  }
+
+  loadCompanyName(): void {
+    this.configurationService.getGeneralSettings().subscribe({
+      next: (settings) => {
+        this.companyName = settings.companyName || 'KARMALITE';
+      },
+      error: (error) => {
+        console.error('Error loading company name:', error);
+      }
+    });
+  }
+
+  loadLogo(): void {
+    this.configurationService.logoUrl$.subscribe(url => {
+      this.logoUrl = url;
+    });
+    this.configurationService.loadLogo();
+  }
 
   toggleSidenav(): void {
     this.isSidenavOpen = !this.isSidenavOpen;

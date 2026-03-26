@@ -4,7 +4,10 @@
       <mat-icon>menu</mat-icon>
     </button>
 
-    <span class="toolbar-title">KARMALITE Admin</span>
+    <div class="logo-container">
+      <img *ngIf="logoUrl" [src]="logoUrl" alt="{{companyName}}" class="toolbar-logo">
+      <span class="toolbar-title">{{companyName}} Admin</span>
+    </div>
 
     <span class="spacer"></span>
 
@@ -22,6 +25,12 @@
 
   <mat-sidenav-container class="sidenav-container">
     <mat-sidenav #sidenav mode="side" [opened]="isSidenavOpen" class="sidenav">
+      <div class="sidenav-header">
+        <div class="sidenav-logo-container">
+          <img *ngIf="logoUrl" [src]="logoUrl" alt="{{companyName}}" class="sidenav-logo">
+          <h2 *ngIf="!logoUrl">{{companyName}}</h2>
+        </div>
+      </div>
       <div class="sidenav-content">
         <mat-nav-list>
           <a mat-list-item *ngFor="let item of menuItems"

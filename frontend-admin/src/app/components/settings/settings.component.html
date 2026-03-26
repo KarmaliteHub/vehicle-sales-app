@@ -141,16 +141,19 @@
             <div class="logo-upload">
               <h3>Logo del Sistema</h3>
               <div class="upload-container">
-                <div class="logo-preview" *ngIf="previewUrl">
-                  <img [src]="previewUrl" alt="Logo preview">
+                <div class="logo-preview" *ngIf="previewUrl || currentLogoUrl">
+                  <img [src]="previewUrl || currentLogoUrl" alt="Logo preview">
                 </div>
                 <div class="upload-controls">
                   <input type="file" #logoInput (change)="onFileSelected($event)" accept="image/*" hidden>
                   <button mat-raised-button (click)="logoInput.click()">
                     <mat-icon>upload</mat-icon> Seleccionar Logo
                   </button>
-                  <button mat-raised-button color="primary" (click)="uploadLogo()" [disabled]="!selectedFile">
-                    <mat-icon>cloud_upload</mat-icon> Subir Logo
+                  <button mat-raised-button color="primary" (click)="uploadLogo()"
+                          [disabled]="!selectedFile || isUploadingLogo">
+                    <mat-spinner diameter="20" *ngIf="isUploadingLogo"></mat-spinner>
+                    <mat-icon *ngIf="!isUploadingLogo">cloud_upload</mat-icon>
+                    {{ isUploadingLogo ? 'Subiendo...' : 'Subir Logo' }}
                   </button>
                   <p>Formatos soportados: JPG, PNG, SVG. Tamaño máximo: 2MB</p>
                 </div>
@@ -248,6 +251,11 @@
               <mat-slide-toggle formControlName="securityNotifications" color="primary"></mat-slide-toggle>
             </div>
           </form>
+          <div style="margin-top: 20px; text-align: center;">
+            <button mat-raised-button (click)="sendTestNotification()" color="accent">
+              <mat-icon>send</mat-icon> Enviar Notificación de Prueba
+            </button>
+          </div>
         </mat-card-content>
         <mat-divider></mat-divider>
         <mat-card-actions>

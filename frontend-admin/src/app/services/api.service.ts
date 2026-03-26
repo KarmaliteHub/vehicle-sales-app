@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
-import { Observable, throwError, timer } from 'rxjs';
+import { Observable, throwError, timer, BehaviorSubject } from 'rxjs';
 import { catchError, retry } from 'rxjs/operators';
 import { AuthService } from './auth.service';
 import { ApiErrorHandlerService } from './api-error-handler.service';
@@ -112,6 +112,27 @@ export class ApiService {
     const fullUrl = `${this.baseUrl}${finalPath}`;
     console.log('🖼️ Built full URL:', fullUrl);
     return fullUrl;
+  }
+
+  getLogo(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/site-logo/`, { headers: this.getHeaders() });
+  }
+
+  uploadLogo(file: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('logo', file);
+    return this.http.post(`${this.apiUrl}/site-logo/`, formData, {
+      headers: this.getFormDataHeaders()
+    });
+  }
+
+  deleteLogo(id: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/site-logo/${id}/`, { headers: this.getHeaders() });
+  }
+
+  // Test notification
+  sendTestNotification(): Observable<any> {
+    return this.http.post(`${this.apiUrl}/send-test-notification/`, {}, { headers: this.getHeaders() });
   }
 
   // Cars

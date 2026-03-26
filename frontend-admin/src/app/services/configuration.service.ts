@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
-import { Observable, throwError, timer, of } from 'rxjs';
+import { Observable, throwError, timer, of, BehaviorSubject } from 'rxjs';
 import { retry, catchError, switchMap, map } from 'rxjs/operators';
 import { AuthService } from './auth.service';
+import { ApiService } from './api.service'; // Asegurar que ApiService está importado
 import { environment } from '../../environments/environment';
 
 // Interfaces TypeScript para tipos de configuración
@@ -64,10 +65,13 @@ export class ConfigurationService {
   private apiUrl = environment.apiUrl;
   private maxRetries = 3;
   private retryDelay = 1000;
+  private logoUrlSubject = new BehaviorSubject<string | null>(null);
+  public logoUrl$ = this.logoUrlSubject.asObservable();
 
   constructor(
     private http: HttpClient,
-    private authService: AuthService
+    private authService: AuthService,
+    private apiService: ApiService  // Inyectar ApiService correctamente
   ) {}
 
   private getHeaders(): HttpHeaders {
@@ -343,5 +347,31 @@ export class ConfigurationService {
     }));
 
     return this.bulkUpdateConfigurations(configurations);
+  }
+
+  // Métodos para logo
+  loadLogo(): void {
+    if (!this.apiService) {
+      console.error('ApiService no está disponible');
+      return;
+    }
+
+    this.apiService.getLogo().subscribe({
+      next: (logos) => {
+        if (logos && logos.length > 0) {
+          const activeLogo = logos.find((logo: any) => logo.is_active);
+          if (activeLogo && activeLogo.logo_url) {
+            this.logoUrlSubject.next(activeLogo.logo_url);
+          }
+        }
+      },
+      error: (error) => {
+        console.error('Error loading logo:', error);
+      }
+    });
+  }
+
+  getCurrentLogoUrl(): string | null {
+    return this.logoUrlSubject.value;
   }
 }
