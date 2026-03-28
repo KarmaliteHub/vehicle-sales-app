@@ -38,6 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'corsheaders',
+    'cloudinary_storage',  # Agregado para Cloudinary
+    'cloudinary',          # Agregado para Cloudinary
     'vehicles',
 ]
 
@@ -134,12 +136,18 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# Configuración de Media y Cloudinary
-# Importar Cloudinary solo si estamos en producción
-if os.environ.get('ENVIRONMENT') == 'production':
-    import cloudinary
-    import cloudinary.uploader
-    import cloudinary.api
+# ============ CONFIGURACIÓN DE CLOUDINARY ============
+# Importar Cloudinary siempre
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
+
+# Configurar Cloudinary con las variables de entorno
+cloudinary.config(
+    cloud_name=os.environ.get('CLOUDINARY_CLOUD_NAME', ''),
+    api_key=os.environ.get('CLOUDINARY_API_KEY', ''),
+    api_secret=os.environ.get('CLOUDINARY_API_SECRET', ''),
+)
 
 CLOUDINARY_STORAGE = {
     'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME', ''),
@@ -171,6 +179,7 @@ SIMPLE_JWT = {
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
 }
 
+# ============ CONFIGURACIÓN DE CORS ============
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:4200",
     "http://localhost:4300",
@@ -179,16 +188,15 @@ CORS_ALLOWED_ORIGINS = [
     "https://vehicle-sales-admin.netlify.app",
     "https://vehicle-sales-frontend.netlify.app",
     "https://vehicle-sales-web.netlify.app",
-
     "https://webvehiclespublic.netlify.app",
     "https://adminwebvehicles.netlify.app",
 ]
 
-# Si estás usando variables de entorno
+# Si hay variables de entorno para CORS, sobrescribir
 if os.environ.get('CORS_ALLOWED_ORIGINS'):
-    CORS_ALLOWED_ORIGINS = os.environ.get('CORS_ALLOWED_ORIGINS').split(',')
-
-CORS_ALLOWED_ORIGINS = os.environ.get('CORS_ALLOWED_ORIGINS', '').split(',') if os.environ.get('CORS_ALLOWED_ORIGINS') else CORS_ALLOWED_ORIGINS_DEFAULT
+    cors_origins = os.environ.get('CORS_ALLOWED_ORIGINS').split(',')
+    if cors_origins:
+        CORS_ALLOWED_ORIGINS = cors_origins
 
 # Configuración de logging para producción
 if not DEBUG:
@@ -206,6 +214,11 @@ if not DEBUG:
         },
         'loggers': {
             'django': {
+                'handlers': ['console'],
+                'level': 'INFO',
+                'propagate': False,
+            },
+            'cloudinary': {
                 'handlers': ['console'],
                 'level': 'INFO',
                 'propagate': False,
