@@ -179,6 +179,9 @@ CORS_ALLOWED_ORIGINS = [
     "https://vehicle-sales-admin.netlify.app",
     "https://vehicle-sales-frontend.netlify.app",
     "https://vehicle-sales-web.netlify.app",
+
+    "https://webvehiclespublic.netlify.app",
+    "https://adminwebvehicles.netlify.app",
 ]
 
 # Configuración de logging para producción
