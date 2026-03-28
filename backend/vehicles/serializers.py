@@ -40,10 +40,17 @@ class CarSerializer(serializers.ModelSerializer):
     
     def get_image_url(self, obj):
         if obj.image:
+            url = obj.image.url
+            
+            # Si ya es una URL absoluta (http:// o https://), devolverla directamente
+            if url.startswith('http://') or url.startswith('https://'):
+                return url
+            
+            # Si es una URL relativa, construir la URL absoluta
             request = self.context.get('request')
             if request:
-                return request.build_absolute_uri(obj.image.url)
-            return obj.image.url
+                return request.build_absolute_uri(url)
+            return url
         return None
     
     def update(self, instance, validated_data):
@@ -56,6 +63,7 @@ class CarSerializer(serializers.ModelSerializer):
             setattr(instance, attr, value)
         instance.save()
         return instance
+
 
 class MotorcycleSerializer(serializers.ModelSerializer):
     created_by = UserSerializer(read_only=True)
@@ -71,10 +79,17 @@ class MotorcycleSerializer(serializers.ModelSerializer):
     
     def get_image_url(self, obj):
         if obj.image:
+            url = obj.image.url
+            
+            # Si ya es una URL absoluta (http:// o https://), devolverla directamente
+            if url.startswith('http://') or url.startswith('https://'):
+                return url
+            
+            # Si es una URL relativa, construir la URL absoluta
             request = self.context.get('request')
             if request:
-                return request.build_absolute_uri(obj.image.url)
-            return obj.image.url
+                return request.build_absolute_uri(url)
+            return url
         return None
     
     def update(self, instance, validated_data):
@@ -87,6 +102,7 @@ class MotorcycleSerializer(serializers.ModelSerializer):
             setattr(instance, attr, value)
         instance.save()
         return instance
+
 
 class FeaturedItemSerializer(serializers.ModelSerializer):
     type = serializers.SerializerMethodField()
@@ -101,11 +117,25 @@ class FeaturedItemSerializer(serializers.ModelSerializer):
     
     def get_image_url(self, obj):
         if obj.image_url:
+            # Verificar si ya es una URL completa de Cloudinary
+            if obj.image_url.startswith('http://') or obj.image_url.startswith('https://'):
+                # Si ya tiene el dominio de Cloudinary, devolverlo directamente
+                if 'cloudinary.com' in obj.image_url:
+                    return obj.image_url
+            
+            # Construir URL absoluta para rutas relativas
             request = self.context.get('request')
             if request:
-                return request.build_absolute_uri('/media/' + obj.image_url)
-            return '/media/' + obj.image_url
+                # Limpiar la ruta para evitar duplicados
+                clean_path = obj.image_url
+                if clean_path.startswith('/media/'):
+                    clean_path = clean_path[6:]
+                elif clean_path.startswith('media/'):
+                    clean_path = clean_path[6:]
+                return request.build_absolute_uri(f'/media/{clean_path}')
+            return f'/media/{obj.image_url}'
         return None
+
 
 class DiscountSerializer(serializers.ModelSerializer):
     type = serializers.SerializerMethodField()
@@ -129,10 +159,21 @@ class DiscountSerializer(serializers.ModelSerializer):
     
     def get_image_url(self, obj):
         if obj.image_url:
+            # Verificar si ya es una URL completa de Cloudinary
+            if obj.image_url.startswith('http://') or obj.image_url.startswith('https://'):
+                if 'cloudinary.com' in obj.image_url:
+                    return obj.image_url
+            
+            # Construir URL absoluta para rutas relativas
             request = self.context.get('request')
             if request:
-                return request.build_absolute_uri('/media/' + obj.image_url)
-            return '/media/' + obj.image_url
+                clean_path = obj.image_url
+                if clean_path.startswith('/media/'):
+                    clean_path = clean_path[6:]
+                elif clean_path.startswith('media/'):
+                    clean_path = clean_path[6:]
+                return request.build_absolute_uri(f'/media/{clean_path}')
+            return f'/media/{obj.image_url}'
         return None
 
 class ContactMessageSerializer(serializers.ModelSerializer):
@@ -158,8 +199,15 @@ class SiteLogoSerializer(serializers.ModelSerializer):
     
     def get_logo_url(self, obj):
         if obj.logo:
+            url = obj.logo.url
+            
+            # Si ya es una URL absoluta (http:// o https://), devolverla directamente
+            if url.startswith('http://') or url.startswith('https://'):
+                return url
+            
+            # Si es una URL relativa, construir la URL absoluta
             request = self.context.get('request')
             if request:
-                return request.build_absolute_uri(obj.logo.url)
-            return obj.logo.url
+                return request.build_absolute_uri(url)
+            return url
         return None
