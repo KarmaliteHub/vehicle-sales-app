@@ -27,6 +27,26 @@ class Car(models.Model):
     
     def __str__(self):
         return f"{self.brand} {self.model} ({self.year})"
+    
+    def get_image_url(self):
+        """Método para obtener la URL completa de la imagen"""
+        if self.image:
+            url = self.image.url
+            # Si la URL no tiene protocolo, asegurar que tenga https://
+            if url.startswith('//'):
+                return f"https:{url}"
+            # Si falta una barra después del dominio
+            if 'res.cloudinary.com' in url and '://' in url:
+                # Asegurar que la URL está bien formada
+                parts = url.split('://')
+                if len(parts) == 2:
+                    domain_part = parts[1]
+                    # Verificar si hay doble barra
+                    if '//' in domain_part:
+                        domain_part = domain_part.replace('//', '/')
+                        return f"{parts[0]}://{domain_part}"
+            return url
+        return None
 
 class Motorcycle(models.Model):
     CATEGORY_CHOICES = [
@@ -54,6 +74,26 @@ class Motorcycle(models.Model):
     
     def __str__(self):
         return f"{self.brand} {self.model} ({self.year})"
+    
+    def get_image_url(self):
+        """Método para obtener la URL completa de la imagen"""
+        if self.image:
+            url = self.image.url
+            # Si la URL no tiene protocolo, asegurar que tenga https://
+            if url.startswith('//'):
+                return f"https:{url}"
+            # Si falta una barra después del dominio
+            if 'res.cloudinary.com' in url and '://' in url:
+                # Asegurar que la URL está bien formada
+                parts = url.split('://')
+                if len(parts) == 2:
+                    domain_part = parts[1]
+                    # Verificar si hay doble barra
+                    if '//' in domain_part:
+                        domain_part = domain_part.replace('//', '/')
+                        return f"{parts[0]}://{domain_part}"
+            return url
+        return None
 
 class FeaturedItem(models.Model):
     VEHICLE_TYPE_CHOICES = [
@@ -102,14 +142,14 @@ class FeaturedItem(models.Model):
             self.title = f"{self.car.brand} {self.car.model} ({self.car.year})"
             self.price = self.car.price
             if self.car.image:
-                # Solo guardamos el path relativo, la URL completa se genera en el serializer
-                self.image_url = self.car.image.name
+                # Obtener la URL completa usando el método auxiliar
+                self.image_url = self.car.get_image_url() or self.car.image.name
         elif self.vehicle_type == 'motorcycle' and self.motorcycle:
             self.title = f"{self.motorcycle.brand} {self.motorcycle.model} ({self.motorcycle.year})"
             self.price = self.motorcycle.price
             if self.motorcycle.image:
-                # Solo guardamos el path relativo, la URL completa se genera en el serializer
-                self.image_url = self.motorcycle.image.name
+                # Obtener la URL completa usando el método auxiliar
+                self.image_url = self.motorcycle.get_image_url() or self.motorcycle.image.name
         
         super().save(*args, **kwargs)
     
@@ -144,14 +184,14 @@ class Discount(models.Model):
             self.title = f"{self.car.brand} {self.car.model} ({self.car.year})"
             self.original_price = self.car.price
             if self.car.image:
-                # Solo guardamos el path relativo, la URL completa se genera en el serializer
-                self.image_url = self.car.image.name
+                # Obtener la URL completa usando el método auxiliar
+                self.image_url = self.car.get_image_url() or self.car.image.name
         elif self.vehicle_type == 'motorcycle' and self.motorcycle:
             self.title = f"{self.motorcycle.brand} {self.motorcycle.model} ({self.motorcycle.year})"
             self.original_price = self.motorcycle.price
             if self.motorcycle.image:
-                # Solo guardamos el path relativo, la URL completa se genera en el serializer
-                self.image_url = self.motorcycle.image.name
+                # Obtener la URL completa usando el método auxiliar
+                self.image_url = self.motorcycle.get_image_url() or self.motorcycle.image.name
         
         super().save(*args, **kwargs)
     
@@ -251,3 +291,19 @@ class SiteLogo(models.Model):
     
     def __str__(self):
         return f"Logo {self.uploaded_at.strftime('%Y-%m-%d %H:%M')}"
+    
+    def get_logo_url(self):
+        """Método para obtener la URL completa del logo"""
+        if self.logo:
+            url = self.logo.url
+            if url.startswith('//'):
+                return f"https:{url}"
+            if 'res.cloudinary.com' in url and '://' in url:
+                parts = url.split('://')
+                if len(parts) == 2:
+                    domain_part = parts[1]
+                    if '//' in domain_part:
+                        domain_part = domain_part.replace('//', '/')
+                        return f"{parts[0]}://{domain_part}"
+            return url
+        return None

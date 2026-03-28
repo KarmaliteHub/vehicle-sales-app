@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Car, Motorcycle, ContactMessage, Subscriber, FeaturedItem, Discount, SystemConfiguration, SystemLog, SiteLogo  # Añadir SiteLogo
+from .models import Car, Motorcycle, ContactMessage, Subscriber, FeaturedItem, Discount, SystemConfiguration, SystemLog, SiteLogo
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -42,6 +42,20 @@ class CarSerializer(serializers.ModelSerializer):
         if obj.image:
             url = obj.image.url
             
+            # Corregir URLs malformadas
+            if url.startswith('https:/') and 'res.cloudinary.com' in url:
+                # Reemplazar 'https:/' con 'https://'
+                url = url.replace('https:/', 'https://', 1)
+            
+            # Si la URL tiene doble barra después del dominio
+            if 'res.cloudinary.com' in url and '://' in url:
+                parts = url.split('://')
+                if len(parts) == 2:
+                    domain_part = parts[1]
+                    if '//' in domain_part:
+                        domain_part = domain_part.replace('//', '/')
+                        url = f"{parts[0]}://{domain_part}"
+            
             # Si ya es una URL absoluta (http:// o https://), devolverla directamente
             if url.startswith('http://') or url.startswith('https://'):
                 return url
@@ -81,6 +95,20 @@ class MotorcycleSerializer(serializers.ModelSerializer):
         if obj.image:
             url = obj.image.url
             
+            # Corregir URLs malformadas
+            if url.startswith('https:/') and 'res.cloudinary.com' in url:
+                # Reemplazar 'https:/' con 'https://'
+                url = url.replace('https:/', 'https://', 1)
+            
+            # Si la URL tiene doble barra después del dominio
+            if 'res.cloudinary.com' in url and '://' in url:
+                parts = url.split('://')
+                if len(parts) == 2:
+                    domain_part = parts[1]
+                    if '//' in domain_part:
+                        domain_part = domain_part.replace('//', '/')
+                        url = f"{parts[0]}://{domain_part}"
+            
             # Si ya es una URL absoluta (http:// o https://), devolverla directamente
             if url.startswith('http://') or url.startswith('https://'):
                 return url
@@ -117,23 +145,35 @@ class FeaturedItemSerializer(serializers.ModelSerializer):
     
     def get_image_url(self, obj):
         if obj.image_url:
+            url = obj.image_url
+            
+            # Corregir URLs malformadas
+            if url.startswith('https:/') and 'res.cloudinary.com' in url:
+                url = url.replace('https:/', 'https://', 1)
+            
             # Verificar si ya es una URL completa de Cloudinary
-            if obj.image_url.startswith('http://') or obj.image_url.startswith('https://'):
-                # Si ya tiene el dominio de Cloudinary, devolverlo directamente
-                if 'cloudinary.com' in obj.image_url:
-                    return obj.image_url
+            if url.startswith('http://') or url.startswith('https://'):
+                # Si tiene doble barra después del dominio, corregir
+                if 'res.cloudinary.com' in url and '://' in url:
+                    parts = url.split('://')
+                    if len(parts) == 2:
+                        domain_part = parts[1]
+                        if '//' in domain_part:
+                            domain_part = domain_part.replace('//', '/')
+                            url = f"{parts[0]}://{domain_part}"
+                return url
             
             # Construir URL absoluta para rutas relativas
             request = self.context.get('request')
             if request:
                 # Limpiar la ruta para evitar duplicados
-                clean_path = obj.image_url
+                clean_path = url
                 if clean_path.startswith('/media/'):
                     clean_path = clean_path[6:]
                 elif clean_path.startswith('media/'):
                     clean_path = clean_path[6:]
                 return request.build_absolute_uri(f'/media/{clean_path}')
-            return f'/media/{obj.image_url}'
+            return f'/media/{url}'
         return None
 
 
@@ -159,21 +199,33 @@ class DiscountSerializer(serializers.ModelSerializer):
     
     def get_image_url(self, obj):
         if obj.image_url:
+            url = obj.image_url
+            
+            # Corregir URLs malformadas
+            if url.startswith('https:/') and 'res.cloudinary.com' in url:
+                url = url.replace('https:/', 'https://', 1)
+            
             # Verificar si ya es una URL completa de Cloudinary
-            if obj.image_url.startswith('http://') or obj.image_url.startswith('https://'):
-                if 'cloudinary.com' in obj.image_url:
-                    return obj.image_url
+            if url.startswith('http://') or url.startswith('https://'):
+                if 'res.cloudinary.com' in url and '://' in url:
+                    parts = url.split('://')
+                    if len(parts) == 2:
+                        domain_part = parts[1]
+                        if '//' in domain_part:
+                            domain_part = domain_part.replace('//', '/')
+                            url = f"{parts[0]}://{domain_part}"
+                return url
             
             # Construir URL absoluta para rutas relativas
             request = self.context.get('request')
             if request:
-                clean_path = obj.image_url
+                clean_path = url
                 if clean_path.startswith('/media/'):
                     clean_path = clean_path[6:]
                 elif clean_path.startswith('media/'):
                     clean_path = clean_path[6:]
                 return request.build_absolute_uri(f'/media/{clean_path}')
-            return f'/media/{obj.image_url}'
+            return f'/media/{url}'
         return None
 
 class ContactMessageSerializer(serializers.ModelSerializer):
@@ -200,6 +252,19 @@ class SiteLogoSerializer(serializers.ModelSerializer):
     def get_logo_url(self, obj):
         if obj.logo:
             url = obj.logo.url
+            
+            # Corregir URLs malformadas
+            if url.startswith('https:/') and 'res.cloudinary.com' in url:
+                url = url.replace('https:/', 'https://', 1)
+            
+            # Si tiene doble barra después del dominio
+            if 'res.cloudinary.com' in url and '://' in url:
+                parts = url.split('://')
+                if len(parts) == 2:
+                    domain_part = parts[1]
+                    if '//' in domain_part:
+                        domain_part = domain_part.replace('//', '/')
+                        url = f"{parts[0]}://{domain_part}"
             
             # Si ya es una URL absoluta (http:// o https://), devolverla directamente
             if url.startswith('http://') or url.startswith('https://'):
