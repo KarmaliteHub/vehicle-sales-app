@@ -184,7 +184,7 @@ CORS_ALLOWED_ORIGINS [
     "https://adminwebvehicles.netlify.app",
 ]
 
-CORS_ALLOWED_ORIGINS = os.environ.get('CORS_ALLOWED_ORIGINS', '').split(',') if os.environ.get('CORS_ALLOWED_ORIGINS') else CORS_ALLOWED_ORIGINS_DEFAULT
+
 
 # Configuración de logging para producción
 if not DEBUG:
