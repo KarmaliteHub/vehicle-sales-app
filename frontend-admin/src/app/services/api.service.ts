@@ -75,41 +75,37 @@ export class ApiService {
   getImageUrl(imagePath: string): string {
     console.log('🖼️ API SERVICE - getImageUrl called with:', imagePath);
 
-    if (!imagePath || imagePath === 'null' || imagePath === 'undefined') {
+    if (!imagePath || imagePath === 'null' || imagePath === 'undefined' || imagePath === '') {
       console.log('🖼️ No image path, returning default');
-      return 'assets/images/no-image.jpg';
+      return 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23333"%3E%3Cpath d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-1 8h-4v4h-4v-4H6V7h4V3h4v4h4v4z"%3E%3C/path%3E%3C/svg%3E';
     }
 
-    // CASO 1: Ya es URL completa (http://, https://)
-    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+    // Ya es URL completa (http://, https://, data:image)
+    if (imagePath.startsWith('http://') || imagePath.startsWith('https://') || imagePath.startsWith('data:image')) {
       console.log('🖼️ Already full URL:', imagePath);
       return imagePath;
     }
 
-    // CASO 2: Es Base64 (data:image/...)
-    if (imagePath.startsWith('data:image')) {
-      console.log('🖼️ Base64 image');
+    // Caso especial para Cloudinary
+    if (imagePath.includes('cloudinary.com')) {
+      console.log('🖼️ Cloudinary URL:', imagePath);
       return imagePath;
     }
 
-    // CASO 3: Ruta relativa de Django (lo más común)
+    // Ruta relativa - construir URL completa
     console.log('🖼️ Relative path detected:', imagePath);
 
-    // Tu backend Django guarda las imágenes en /media/
-    // Cuando no hay request en el serializer, devuelve: 'cars/foto.jpg' o 'motorcycles/foto.jpg'
-
-    // Asegurar que empiece con '/media/'
-    let finalPath = imagePath;
-
-    if (!finalPath.startsWith('/media/')) {
-      if (finalPath.startsWith('media/')) {
-        finalPath = '/' + finalPath;
-      } else {
-        finalPath = '/media/' + finalPath;
-      }
+    // Eliminar prefijos duplicados
+    let cleanPath = imagePath;
+    if (cleanPath.startsWith('/media/')) {
+      cleanPath = cleanPath.substring(6); // Quitar '/media/'
+    }
+    if (cleanPath.startsWith('media/')) {
+      cleanPath = cleanPath.substring(6); // Quitar 'media/'
     }
 
-    const fullUrl = `${this.baseUrl}${finalPath}`;
+    // Construir URL completa
+    const fullUrl = `${this.baseUrl}/media/${cleanPath}`;
     console.log('🖼️ Built full URL:', fullUrl);
     return fullUrl;
   }
