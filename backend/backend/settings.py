@@ -171,7 +171,7 @@ SIMPLE_JWT = {
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
 }
 
-CORS_ALLOWED_ORIGINS = os.environ.get('CORS_ALLOWED_ORIGINS', '').split(',') if os.environ.get('CORS_ALLOWED_ORIGINS') else [
+CORS_ALLOWED_ORIGINS [
     "http://localhost:4200",
     "http://localhost:4300",
     "https://admincar.netlify.app",
@@ -183,6 +183,8 @@ CORS_ALLOWED_ORIGINS = os.environ.get('CORS_ALLOWED_ORIGINS', '').split(',') if 
     "https://webvehiclespublic.netlify.app",
     "https://adminwebvehicles.netlify.app",
 ]
+
+CORS_ALLOWED_ORIGINS = os.environ.get('CORS_ALLOWED_ORIGINS', '').split(',') if os.environ.get('CORS_ALLOWED_ORIGINS') else CORS_ALLOWED_ORIGINS_DEFAULT
 
 # Configuración de logging para producción
 if not DEBUG:
