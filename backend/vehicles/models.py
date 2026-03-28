@@ -2,6 +2,26 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
 
+def get_clean_image_url(image_field):
+    """Obtiene la URL limpia de un campo de imagen"""
+    if not image_field:
+        return None
+    
+    try:
+        url = image_field.url
+        
+        # Si es Cloudinary, la URL ya es completa
+        if url and 'cloudinary.com' in url:
+            # Asegurar que no haya dobles barras
+            url = url.replace('https:///', 'https://')
+            url = url.replace('http:///', 'http://')
+            url = url.replace('res.cloudinary.com//', 'res.cloudinary.com/')
+            return url
+        
+        return url
+    except Exception:
+        return None
+
 class Car(models.Model):
     TRANSMISSION_CHOICES = [
         ('manual', 'Mecánico'),
@@ -29,24 +49,7 @@ class Car(models.Model):
         return f"{self.brand} {self.model} ({self.year})"
     
     def get_image_url(self):
-        """Método para obtener la URL completa de la imagen"""
-        if self.image:
-            url = self.image.url
-            # Si la URL no tiene protocolo, asegurar que tenga https://
-            if url.startswith('//'):
-                return f"https:{url}"
-            # Si falta una barra después del dominio
-            if 'res.cloudinary.com' in url and '://' in url:
-                # Asegurar que la URL está bien formada
-                parts = url.split('://')
-                if len(parts) == 2:
-                    domain_part = parts[1]
-                    # Verificar si hay doble barra
-                    if '//' in domain_part:
-                        domain_part = domain_part.replace('//', '/')
-                        return f"{parts[0]}://{domain_part}"
-            return url
-        return None
+        return get_clean_image_url(self.image)
 
 class Motorcycle(models.Model):
     CATEGORY_CHOICES = [
@@ -76,24 +79,7 @@ class Motorcycle(models.Model):
         return f"{self.brand} {self.model} ({self.year})"
     
     def get_image_url(self):
-        """Método para obtener la URL completa de la imagen"""
-        if self.image:
-            url = self.image.url
-            # Si la URL no tiene protocolo, asegurar que tenga https://
-            if url.startswith('//'):
-                return f"https:{url}"
-            # Si falta una barra después del dominio
-            if 'res.cloudinary.com' in url and '://' in url:
-                # Asegurar que la URL está bien formada
-                parts = url.split('://')
-                if len(parts) == 2:
-                    domain_part = parts[1]
-                    # Verificar si hay doble barra
-                    if '//' in domain_part:
-                        domain_part = domain_part.replace('//', '/')
-                        return f"{parts[0]}://{domain_part}"
-            return url
-        return None
+        return get_clean_image_url(self.image)
 
 class FeaturedItem(models.Model):
     VEHICLE_TYPE_CHOICES = [

@@ -73,41 +73,23 @@ export class ApiService {
 
   // Método para construir URLs de imágenes completas - VERSIÓN CORREGIDA
   getImageUrl(imagePath: string): string {
-    console.log('🖼️ API SERVICE - getImageUrl called with:', imagePath);
-
     if (!imagePath || imagePath === 'null' || imagePath === 'undefined' || imagePath === '') {
-      console.log('🖼️ No image path, returning default');
-      return 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23333"%3E%3Cpath d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-1 8h-4v4h-4v-4H6V7h4V3h4v4h4v4z"%3E%3C/path%3E%3C/svg%3E';
+        return 'assets/images/no-image.jpg';
     }
 
-    // Ya es URL completa (http://, https://, data:image)
-    if (imagePath.startsWith('http://') || imagePath.startsWith('https://') || imagePath.startsWith('data:image')) {
-      console.log('🖼️ Already full URL:', imagePath);
-      return imagePath;
+    let url = imagePath;
+
+    // Limpieza de URLs malformadas
+    if (url.includes('https:///')) {
+        url = url.replace(/https:\/\/\//g, 'https://');
     }
 
-    // Caso especial para Cloudinary
-    if (imagePath.includes('cloudinary.com')) {
-      console.log('🖼️ Cloudinary URL:', imagePath);
-      return imagePath;
+    if (url.includes('res.cloudinary.com//')) {
+        url = url.replace(/res\.cloudinary\.com\/\//g, 'res.cloudinary.com/');
     }
 
-    // Ruta relativa - construir URL completa
-    console.log('🖼️ Relative path detected:', imagePath);
-
-    // Eliminar prefijos duplicados
-    let cleanPath = imagePath;
-    if (cleanPath.startsWith('/media/')) {
-      cleanPath = cleanPath.substring(6); // Quitar '/media/'
-    }
-    if (cleanPath.startsWith('media/')) {
-      cleanPath = cleanPath.substring(6); // Quitar 'media/'
-    }
-
-    // Construir URL completa
-    const fullUrl = `${this.baseUrl}/media/${cleanPath}`;
-    console.log('🖼️ Built full URL:', fullUrl);
-    return fullUrl;
+    console.log('🖼️ Final URL:', url);
+    return url;
   }
 
   getLogo(): Observable<any> {
