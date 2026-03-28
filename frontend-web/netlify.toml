@@ -5,6 +5,7 @@
 [build.environment]
   NODE_VERSION = "18"
   NPM_VERSION = "9"
+  API_URL = "https://vehicle-sales-backend.onrender.com/api"
 
 [[redirects]]
   from = "/*"
