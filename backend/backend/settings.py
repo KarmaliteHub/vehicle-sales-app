@@ -9,28 +9,6 @@ from dotenv import load_dotenv
 from datetime import timedelta
 from pathlib import Path
 
-if not DEBUG:
-    LOGGING = {
-        'version': 1,
-        'disable_existing_loggers': False,
-        'handlers': {
-            'console': {
-                'class': 'logging.StreamHandler',
-            },
-        },
-        'root': {
-            'handlers': ['console'],
-            'level': 'INFO',
-        },
-        'loggers': {
-            'django': {
-                'handlers': ['console'],
-                'level': 'INFO',
-                'propagate': False,
-            },
-        },
-    }
-
 load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -49,7 +27,7 @@ ALLOWED_HOSTS = [
     'vehicle-sales-admin.netlify.app',
     'vehicle-sales-frontend.netlify.app',
     'vehicle-sales-web.netlify.app',
-    ]
+]
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -99,15 +77,20 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'backend.wsgi.application'
 
-if 'DATABASE_URL' in os.environ:
+# Configuración de Base de Datos
+# Si estamos en producción (Render), usar Supabase vía DATABASE_URL
+# Si no, usar PostgreSQL local
+if os.environ.get('ENVIRONMENT') == 'production' and os.environ.get('DATABASE_URL'):
     DATABASES = {
         'default': dj_database_url.config(
+            default=os.environ.get('DATABASE_URL'),
             conn_max_age=600,
             conn_health_checks=True,
             ssl_require=True,
         )
     }
 else:
+    # Configuración local para desarrollo
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
@@ -123,7 +106,7 @@ else:
         }
     }
 
-# Connection pooling configuration
+# Connection pooling configuration (aplica para ambos entornos)
 DATABASES['default']['CONN_MAX_AGE'] = 600
 DATABASES['default']['CONN_HEALTH_CHECKS'] = True
 
@@ -150,8 +133,27 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# Configuración de Media y Cloudinary
+# Importar Cloudinary solo si estamos en producción
+if os.environ.get('ENVIRONMENT') == 'production':
+    import cloudinary
+    import cloudinary.uploader
+    import cloudinary.api
+
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME', ''),
+    'API_KEY': os.environ.get('CLOUDINARY_API_KEY', ''),
+    'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET', ''),
+}
+
+# Usar Cloudinary en producción, local storage en desarrollo
+if os.environ.get('ENVIRONMENT') == 'production' and CLOUDINARY_STORAGE['CLOUD_NAME']:
+    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+    MEDIA_URL = f"https://res.cloudinary.com/{CLOUDINARY_STORAGE['CLOUD_NAME']}/"
+else:
+    MEDIA_URL = '/media/'
+    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -179,21 +181,25 @@ CORS_ALLOWED_ORIGINS = [
     "https://vehicle-sales-web.netlify.app",
 ]
 
-# Configuración de Cloudinary para archivos media
-import cloudinary
-import cloudinary.uploader
-import cloudinary.api
-
-CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME', ''),
-    'API_KEY': os.environ.get('CLOUDINARY_API_KEY', ''),
-    'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET', ''),
-}
-
-# Usar Cloudinary en producción, local storage en desarrollo
-if not DEBUG and CLOUDINARY_STORAGE['CLOUD_NAME']:
-    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-    MEDIA_URL = f"https://res.cloudinary.com/{CLOUDINARY_STORAGE['CLOUD_NAME']}/"
-else:
-    MEDIA_URL = '/media/'
-    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+# Configuración de logging para producción
+if not DEBUG:
+    LOGGING = {
+        'version': 1,
+        'disable_existing_loggers': False,
+        'handlers': {
+            'console': {
+                'class': 'logging.StreamHandler',
+            },
+        },
+        'root': {
+            'handlers': ['console'],
+            'level': 'INFO',
+        },
+        'loggers': {
+            'django': {
+                'handlers': ['console'],
+                'level': 'INFO',
+                'propagate': False,
+            },
+        },
+    }

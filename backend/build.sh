@@ -2,14 +2,17 @@
 # exit on error
 set -o errexit
 
-# Install dependencies
+# Instalar dependencias de Python
 pip install -r requirements.txt
 
-# Collect static files
+# Instalar dependencias de Node (para cloudinary)
+npm install
+
+# Recopilar archivos estáticos
 python manage.py collectstatic --no-input
 
-# Run migrations
+# Ejecutar migraciones
 python manage.py migrate
 
-# Populate initial configurations
+# Poblar configuraciones iniciales
 python manage.py populate_initial_configs
