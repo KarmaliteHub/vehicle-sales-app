@@ -2,19 +2,14 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import Car, Motorcycle, ContactMessage, Subscriber, FeaturedItem, Discount, SystemConfiguration, SystemLog, SiteLogo
 
-def clean_cloudinary_url(url):
-    """Limpia URLs de Cloudinary"""
+# Función simple de limpieza
+def clean_url(url):
     if not url:
-        return None
-    
-    # Corregir https:///res.cloudinary.com -> https://res.cloudinary.com
-    if 'https:///' in url and 'cloudinary.com' in url:
-        url = url.replace('https:///', 'https://')
-    
-    # Corregir res.cloudinary.com// -> res.cloudinary.com/
-    if 'cloudinary.com//' in url:
-        url = url.replace('cloudinary.com//', 'cloudinary.com/')
-    
+        return url
+    if 'https:///res.cloudinary.com' in url:
+        url = url.replace('https:///res.cloudinary.com', 'https://res.cloudinary.com')
+    if 'res.cloudinary.com//' in url:
+        url = url.replace('res.cloudinary.com//', 'res.cloudinary.com/')
     return url
 
 class UserSerializer(serializers.ModelSerializer):
@@ -54,8 +49,8 @@ class CarSerializer(serializers.ModelSerializer):
         }
     
     def get_image_url(self, obj):
-        url = obj.get_image_url()
-        return clean_cloudinary_url(url)
+        url = obj.get_image_url() if hasattr(obj, 'get_image_url') else (obj.image.url if obj.image else None)
+        return clean_url(url)
     
     def update(self, instance, validated_data):
         image = validated_data.pop('image', None)
@@ -65,7 +60,6 @@ class CarSerializer(serializers.ModelSerializer):
             setattr(instance, attr, value)
         instance.save()
         return instance
-
 
 class MotorcycleSerializer(serializers.ModelSerializer):
     created_by = UserSerializer(read_only=True)
@@ -80,40 +74,13 @@ class MotorcycleSerializer(serializers.ModelSerializer):
         }
     
     def get_image_url(self, obj):
-        if obj.image:
-            url = obj.image.url
-            
-            # Corregir URLs malformadas
-            if url.startswith('https:/') and 'res.cloudinary.com' in url:
-                # Reemplazar 'https:/' con 'https://'
-                url = url.replace('https:/', 'https://', 1)
-            
-            # Si la URL tiene doble barra después del dominio
-            if 'res.cloudinary.com' in url and '://' in url:
-                parts = url.split('://')
-                if len(parts) == 2:
-                    domain_part = parts[1]
-                    if '//' in domain_part:
-                        domain_part = domain_part.replace('//', '/')
-                        url = f"{parts[0]}://{domain_part}"
-            
-            # Si ya es una URL absoluta (http:// o https://), devolverla directamente
-            if url.startswith('http://') or url.startswith('https://'):
-                return url
-            
-            # Si es una URL relativa, construir la URL absoluta
-            request = self.context.get('request')
-            if request:
-                return request.build_absolute_uri(url)
-            return url
-        return None
+        url = obj.get_image_url() if hasattr(obj, 'get_image_url') else (obj.image.url if obj.image else None)
+        return clean_url(url)
     
     def update(self, instance, validated_data):
-        # Manejar actualización de imagen
         image = validated_data.pop('image', None)
         if image:
             instance.image = image
-        # Actualizar otros campos
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()

@@ -131,32 +131,31 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# ============ CONFIGURACIÓN DE CLOUDINARY - CORREGIDA ============
+# ============ CONFIGURACIÓN DE CLOUDINARY - VERSIÓN ESTABLE ============
 import cloudinary
 import cloudinary.uploader
 import cloudinary.api
 
 # Configurar Cloudinary
-CLOUDINARY_CLOUD_NAME = os.environ.get('CLOUDINARY_CLOUD_NAME', '')
-CLOUDINARY_API_KEY = os.environ.get('CLOUDINARY_API_KEY', '')
-CLOUDINARY_API_SECRET = os.environ.get('CLOUDINARY_API_SECRET', '')
-
 cloudinary.config(
-    cloud_name=CLOUDINARY_CLOUD_NAME,
-    api_key=CLOUDINARY_API_KEY,
-    api_secret=CLOUDINARY_API_SECRET,
+    cloud_name=os.environ.get('CLOUDINARY_CLOUD_NAME', ''),
+    api_key=os.environ.get('CLOUDINARY_API_KEY', ''),
+    api_secret=os.environ.get('CLOUDINARY_API_SECRET', ''),
     secure=True
 )
 
-# Configuración de almacenamiento
-if os.environ.get('ENVIRONMENT') == 'production' and CLOUDINARY_CLOUD_NAME:
-    # En producción con Cloudinary
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME', ''),
+    'API_KEY': os.environ.get('CLOUDINARY_API_KEY', ''),
+    'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET', ''),
+}
+
+# Usar Cloudinary en producción
+if os.environ.get('ENVIRONMENT') == 'production' and CLOUDINARY_STORAGE['CLOUD_NAME']:
     DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-    # IMPORTANTE: NO definir MEDIA_URL manualmente cuando usamos CloudinaryStorage
-    # Dejamos que CloudinaryStorage genere las URLs automáticamente
-    MEDIA_URL = None  # Esto evita que Django concatene URLs incorrectamente
+    # MANTENER MEDIA_URL con el formato correcto para que Django funcione
+    MEDIA_URL = f"https://res.cloudinary.com/{CLOUDINARY_STORAGE['CLOUD_NAME']}/"
 else:
-    # En desarrollo local
     MEDIA_URL = '/media/'
     MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 

@@ -2,25 +2,16 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
 
-def get_clean_image_url(image_field):
-    """Obtiene la URL limpia de un campo de imagen"""
-    if not image_field:
-        return None
-    
-    try:
-        url = image_field.url
-        
-        # Si es Cloudinary, la URL ya es completa
-        if url and 'cloudinary.com' in url:
-            # Asegurar que no haya dobles barras
-            url = url.replace('https:///', 'https://')
-            url = url.replace('http:///', 'http://')
-            url = url.replace('res.cloudinary.com//', 'res.cloudinary.com/')
-            return url
-        
+# Función simple para limpiar URLs
+def clean_url(url):
+    if not url:
         return url
-    except Exception:
-        return None
+    # Solo limpiar el caso específico que está fallando
+    if 'https:///res.cloudinary.com' in url:
+        url = url.replace('https:///res.cloudinary.com', 'https://res.cloudinary.com')
+    if 'res.cloudinary.com//' in url:
+        url = url.replace('res.cloudinary.com//', 'res.cloudinary.com/')
+    return url
 
 class Car(models.Model):
     TRANSMISSION_CHOICES = [
@@ -49,7 +40,9 @@ class Car(models.Model):
         return f"{self.brand} {self.model} ({self.year})"
     
     def get_image_url(self):
-        return get_clean_image_url(self.image)
+        if self.image and self.image.url:
+            return clean_url(self.image.url)
+        return None
 
 class Motorcycle(models.Model):
     CATEGORY_CHOICES = [
@@ -79,7 +72,9 @@ class Motorcycle(models.Model):
         return f"{self.brand} {self.model} ({self.year})"
     
     def get_image_url(self):
-        return get_clean_image_url(self.image)
+        if self.image and self.image.url:
+            return clean_url(self.image.url)
+        return None
 
 class FeaturedItem(models.Model):
     VEHICLE_TYPE_CHOICES = [
