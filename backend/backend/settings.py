@@ -154,15 +154,15 @@ CLOUDINARY_STORAGE = {
     'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME', ''),
     'API_KEY': os.environ.get('CLOUDINARY_API_KEY', ''),
     'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET', ''),
-    'SECURE': True,  # Asegurar URLs HTTPS
-    'STATIC_IMAGES_EXTENSIONS': ['jpg', 'jpeg', 'png', 'gif', 'webp'],
+    'SECURE': True,
 }
 
-# Usar Cloudinary en producción, local storage en desarrollo
+# Usar Cloudinary en producción
 if os.environ.get('ENVIRONMENT') == 'production' and CLOUDINARY_STORAGE['CLOUD_NAME']:
     DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-    # La URL se genera automáticamente por CloudinaryStorage
-    MEDIA_URL = f"https://res.cloudinary.com/{CLOUDINARY_STORAGE['CLOUD_NAME']}/"
+    # IMPORTANTE: NO definir MEDIA_URL cuando usas Cloudinary
+    # Deja MEDIA_URL vacío o coméntalo
+    MEDIA_URL = ''  # <--- ESTO ES CLAVE, dejarlo vacío
 else:
     MEDIA_URL = '/media/'
     MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

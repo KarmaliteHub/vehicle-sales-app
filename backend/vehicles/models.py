@@ -4,13 +4,25 @@ from django.utils import timezone
 
 # Función simple para limpiar URLs
 def clean_url(url):
+    """Función simple para limpiar URLs"""
     if not url:
         return url
-    # Solo limpiar el caso específico que está fallando
-    if 'https:///res.cloudinary.com' in url:
-        url = url.replace('https:///res.cloudinary.com', 'https://res.cloudinary.com')
+    
+    # Corregir https:/ (un solo slash) a https:// (doble slash)
+    if url.startswith('https:/') and not url.startswith('https://'):
+        url = url.replace('https:/', 'https://', 1)
+    
+    # Limpiar duplicados de Cloudinary
+    import re
+    # Buscar patrón duplicado
+    duplicate_pattern = r'(https://res\.cloudinary\.com/[^/]+/)https:/res\.cloudinary\.com/'
+    if re.search(duplicate_pattern, url):
+        url = re.sub(duplicate_pattern, r'\1', url)
+    
+    # Si aún hay doble slash después del dominio
     if 'res.cloudinary.com//' in url:
         url = url.replace('res.cloudinary.com//', 'res.cloudinary.com/')
+    
     return url
 
 class Car(models.Model):
@@ -40,9 +52,29 @@ class Car(models.Model):
         return f"{self.brand} {self.model} ({self.year})"
     
     def get_image_url(self):
-        if self.image and self.image.url:
-            return clean_url(self.image.url)
-        return None
+        """Método para obtener la URL completa de la imagen"""
+        if not self.image:
+            return None
+        
+        url = self.image.url
+        
+        # Si la URL ya es completa (https://), devolverla directamente
+        if url.startswith('https://') or url.startswith('http://'):
+            # Limpiar solo si hay un problema específico
+            # Reemplazar https:/ (un solo slash) por https:// (doble slash)
+            if 'https:/' in url and 'https://' not in url:
+                url = url.replace('https:/', 'https://', 1)
+            
+            # Si todavía tiene duplicado, limpiar
+            # Buscar patrón: https://res.cloudinary.com/xxxx/https:/res.cloudinary.com/
+            import re
+            pattern = r'(https://res\.cloudinary\.com/[^/]+/)https:/res\.cloudinary\.com/'
+            if re.search(pattern, url):
+                url = re.sub(pattern, r'\1', url)
+            
+            return url
+        
+        return url
 
 class Motorcycle(models.Model):
     CATEGORY_CHOICES = [
@@ -72,9 +104,29 @@ class Motorcycle(models.Model):
         return f"{self.brand} {self.model} ({self.year})"
     
     def get_image_url(self):
-        if self.image and self.image.url:
-            return clean_url(self.image.url)
-        return None
+        """Método para obtener la URL completa de la imagen"""
+        if not self.image:
+            return None
+        
+        url = self.image.url
+        
+        # Si la URL ya es completa (https://), devolverla directamente
+        if url.startswith('https://') or url.startswith('http://'):
+            # Limpiar solo si hay un problema específico
+            # Reemplazar https:/ (un solo slash) por https:// (doble slash)
+            if 'https:/' in url and 'https://' not in url:
+                url = url.replace('https:/', 'https://', 1)
+            
+            # Si todavía tiene duplicado, limpiar
+            # Buscar patrón: https://res.cloudinary.com/xxxx/https:/res.cloudinary.com/
+            import re
+            pattern = r'(https://res\.cloudinary\.com/[^/]+/)https:/res\.cloudinary\.com/'
+            if re.search(pattern, url):
+                url = re.sub(pattern, r'\1', url)
+            
+            return url
+        
+        return url
 
 class FeaturedItem(models.Model):
     VEHICLE_TYPE_CHOICES = [

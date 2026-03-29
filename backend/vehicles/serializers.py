@@ -49,17 +49,38 @@ class CarSerializer(serializers.ModelSerializer):
         }
     
     def get_image_url(self, obj):
-        url = obj.get_image_url() if hasattr(obj, 'get_image_url') else (obj.image.url if obj.image else None)
-        return clean_url(url)
-    
-    def update(self, instance, validated_data):
-        image = validated_data.pop('image', None)
-        if image:
-            instance.image = image
-        for attr, value in validated_data.items():
-            setattr(instance, attr, value)
-        instance.save()
-        return instance
+        """Obtener URL de imagen limpia"""
+        if not obj.image:
+            return None
+        
+        url = obj.image.url
+        
+        # Si es una URL completa de Cloudinary, limpiar si está mal formada
+        if url:
+            # Caso específico: https:/res.cloudinary.com/... (un solo slash)
+            if url.startswith('https:/') and not url.startswith('https://'):
+                url = url.replace('https:/', 'https://', 1)
+            
+            # Caso de URL duplicada
+            import re
+            # Patrón: https://res.cloudinary.com/dominio/https:/res.cloudinary.com/...
+            duplicate_pattern = r'(https://res\.cloudinary\.com/[^/]+/)https:/res\.cloudinary\.com/'
+            if re.search(duplicate_pattern, url):
+                url = re.sub(duplicate_pattern, r'\1', url)
+            
+            # Limpiar cualquier otro duplicado
+            if 'res.cloudinary.com' in url:
+                # Contar cuántas veces aparece res.cloudinary.com
+                parts = url.split('res.cloudinary.com')
+                if len(parts) > 2:
+                    # Tomar solo la primera parte y la última
+                    url = f"https://res.cloudinary.com{parts[-1]}"
+                    # Asegurar que empiece con /
+                    if not url.startswith('/'):
+                        url = '/' + url
+                    url = f"https://res.cloudinary.com{url}"
+        
+        return url
 
 class MotorcycleSerializer(serializers.ModelSerializer):
     created_by = UserSerializer(read_only=True)
