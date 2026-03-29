@@ -41,6 +41,7 @@ import { ClientsComponent } from './components/clients/clients.component';
 import { DiscountsComponent } from './components/discounts/discounts.component';
 import { FeaturedComponent } from './components/featured/featured.component';
 import { SettingsComponent } from './components/settings/settings.component';
+import { AuthDebugComponent } from './components/auth-debug/auth-debug.component';
 
 // Routing
 import { AppRoutingModule } from './app-routing.module';
@@ -61,7 +62,8 @@ import { AppRoutingModule } from './app-routing.module';
     ClientsComponent,
     DiscountsComponent,
     FeaturedComponent,
-    SettingsComponent
+    SettingsComponent,
+    AuthDebugComponent
   ],
   imports: [
     BrowserModule,

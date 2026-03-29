@@ -7,21 +7,30 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
   const token = authService.getToken();
 
+  console.log('🔌 [AuthInterceptor] Interceptando request:', req.url);
+  console.log('🔌 [AuthInterceptor] Token presente:', !!token);
+
+  let authReq = req;
   if (token) {
-    req = req.clone({
+    authReq = req.clone({
       setHeaders: {
         Authorization: `Bearer ${token}`
       }
     });
+    console.log('🔌 [AuthInterceptor] Token agregado al header Authorization');
   }
 
-  return next(req).pipe(
+  return next(authReq).pipe(
     catchError((error) => {
+      console.error('🔌 [AuthInterceptor] Error en request:', error.status, error.statusText);
+
       if (error.status === 401) {
+        console.log('🔌 [AuthInterceptor] Error 401, intentando refrescar token');
+
         return authService.refreshToken().pipe(
           switchMap((response: any) => {
+            console.log('🔌 [AuthInterceptor] Token refrescado exitosamente');
             const newToken = response.access;
-            localStorage.setItem('access_token', newToken);
 
             const clonedReq = req.clone({
               setHeaders: {
@@ -31,12 +40,13 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
             return next(clonedReq);
           }),
           catchError((refreshError) => {
+            console.error('🔌 [AuthInterceptor] Error refrescando token:', refreshError);
             authService.logout();
-            return throwError(refreshError);
+            return throwError(() => refreshError);
           })
         );
       }
-      return throwError(error);
+      return throwError(() => error);
     })
   );
 };

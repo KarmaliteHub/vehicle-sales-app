@@ -2,6 +2,17 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
 
+# Función simple para limpiar URLs
+def clean_url(url):
+    if not url:
+        return url
+    # Solo limpiar el caso específico que está fallando
+    if 'https:///res.cloudinary.com' in url:
+        url = url.replace('https:///res.cloudinary.com', 'https://res.cloudinary.com')
+    if 'res.cloudinary.com//' in url:
+        url = url.replace('res.cloudinary.com//', 'res.cloudinary.com/')
+    return url
+
 class Car(models.Model):
     TRANSMISSION_CHOICES = [
         ('manual', 'Mecánico'),
@@ -29,23 +40,8 @@ class Car(models.Model):
         return f"{self.brand} {self.model} ({self.year})"
     
     def get_image_url(self):
-        """Método para obtener la URL completa de la imagen"""
-        if self.image:
-            url = self.image.url
-            # Si la URL no tiene protocolo, asegurar que tenga https://
-            if url.startswith('//'):
-                return f"https:{url}"
-            # Si falta una barra después del dominio
-            if 'res.cloudinary.com' in url and '://' in url:
-                # Asegurar que la URL está bien formada
-                parts = url.split('://')
-                if len(parts) == 2:
-                    domain_part = parts[1]
-                    # Verificar si hay doble barra
-                    if '//' in domain_part:
-                        domain_part = domain_part.replace('//', '/')
-                        return f"{parts[0]}://{domain_part}"
-            return url
+        if self.image and self.image.url:
+            return clean_url(self.image.url)
         return None
 
 class Motorcycle(models.Model):
@@ -76,23 +72,8 @@ class Motorcycle(models.Model):
         return f"{self.brand} {self.model} ({self.year})"
     
     def get_image_url(self):
-        """Método para obtener la URL completa de la imagen"""
-        if self.image:
-            url = self.image.url
-            # Si la URL no tiene protocolo, asegurar que tenga https://
-            if url.startswith('//'):
-                return f"https:{url}"
-            # Si falta una barra después del dominio
-            if 'res.cloudinary.com' in url and '://' in url:
-                # Asegurar que la URL está bien formada
-                parts = url.split('://')
-                if len(parts) == 2:
-                    domain_part = parts[1]
-                    # Verificar si hay doble barra
-                    if '//' in domain_part:
-                        domain_part = domain_part.replace('//', '/')
-                        return f"{parts[0]}://{domain_part}"
-            return url
+        if self.image and self.image.url:
+            return clean_url(self.image.url)
         return None
 
 class FeaturedItem(models.Model):
