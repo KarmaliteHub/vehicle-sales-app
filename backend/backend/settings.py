@@ -195,6 +195,36 @@ CORS_ALLOWED_ORIGINS = [
     "https://vehicle-sales-web.netlify.app",
     "https://webvehiclespublic.netlify.app",
     "https://adminwebvehicles.netlify.app",
+    # Agregar más dominios de Netlify que puedan estar en uso
+    "https://webvehicles-admin.netlify.app",
+    "https://webvehicles-web.netlify.app",
+]
+
+# Configuración adicional de CORS para mayor compatibilidad
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_ALL_ORIGINS = False
+
+# Headers permitidos
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
+
+# Métodos permitidos
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
 ]
 
 # Si hay variables de entorno para CORS, sobrescribir

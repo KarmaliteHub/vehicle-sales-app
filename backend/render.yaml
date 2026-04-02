@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: webvehicles-backend
+    name: vehicle-sales-backend
     runtime: python
     plan: free
     buildCommand: "./build.sh"
