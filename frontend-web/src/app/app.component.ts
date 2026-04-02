@@ -51,16 +51,13 @@ export class AppComponent implements OnInit {
   loadSocialMedia(): void {
     this.apiService.getSocialMedia().subscribe({
       next: (socialMedia) => {
-        this.socialMediaList = socialMedia;
+        console.log('Social media loaded:', socialMedia);
+        this.socialMediaList = socialMedia || [];
       },
       error: (error) => {
         console.error('Error loading social media:', error);
-        // Fallback to default social media if API fails
-        this.socialMediaList = [
-          { name: 'Facebook', icon: 'facebook', url: '#' },
-          { name: 'Twitter', icon: 'twitter', url: '#' },
-          { name: 'Instagram', icon: 'instagram', url: '#' }
-        ];
+        // No fallback - if API fails, show no social media
+        this.socialMediaList = [];
       }
     });
   }

@@ -186,6 +186,7 @@ SIMPLE_JWT = {
 # ============ CONFIGURACIÓN DE CORS ============
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:4200",
+    "http://localhost:4201",
     "http://localhost:4300",
     "https://admincar.netlify.app",
     "https://webvehicles.netlify.app",

@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: vehicle-sales-backend
+    name: webvehicles-backend
     runtime: python
     plan: free
     buildCommand: "./build.sh"
@@ -14,6 +14,8 @@ services:
         generateValue: true
       - key: DEBUG
         value: "False"
+      - key: ENVIRONMENT
+        value: "production"
       - key: DJANGO_SETTINGS_MODULE
         value: "backend.settings"
       - key: CLOUDINARY_CLOUD_NAME
