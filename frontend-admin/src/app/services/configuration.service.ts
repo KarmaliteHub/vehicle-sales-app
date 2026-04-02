@@ -39,6 +39,16 @@ export interface SecuritySettings {
   loginAttempts: number;
 }
 
+export interface SocialMediaSettings {
+  id?: number;
+  platform: string;
+  name: string;
+  url: string;
+  icon: string;
+  is_active: boolean;
+  order: number;
+}
+
 export interface SystemConfiguration {
   id?: number;
   key: string;
@@ -373,5 +383,45 @@ export class ConfigurationService {
 
   getCurrentLogoUrl(): string | null {
     return this.logoUrlSubject.value;
+  }
+
+  // Métodos para redes sociales
+  getSocialMediaSettings(): Observable<SocialMediaSettings[]> {
+    return this.retryWithBackoff(
+      this.http.get<SocialMediaSettings[]>(`${this.apiUrl}/social-media/`, {
+        headers: this.getHeaders()
+      })
+    );
+  }
+
+  createSocialMedia(socialMedia: Partial<SocialMediaSettings>): Observable<SocialMediaSettings> {
+    return this.retryWithBackoff(
+      this.http.post<SocialMediaSettings>(`${this.apiUrl}/social-media/`, socialMedia, {
+        headers: this.getHeaders()
+      })
+    );
+  }
+
+  updateSocialMedia(id: number, socialMedia: Partial<SocialMediaSettings>): Observable<SocialMediaSettings> {
+    return this.retryWithBackoff(
+      this.http.put<SocialMediaSettings>(`${this.apiUrl}/social-media/${id}/`, socialMedia, {
+        headers: this.getHeaders()
+      })
+    );
+  }
+
+  deleteSocialMedia(id: number): Observable<void> {
+    return this.retryWithBackoff(
+      this.http.delete<void>(`${this.apiUrl}/social-media/${id}/`, {
+        headers: this.getHeaders()
+      })
+    );
+  }
+
+  // Método público para obtener redes sociales (sin autenticación)
+  getPublicSocialMedia(): Observable<SocialMediaSettings[]> {
+    return this.retryWithBackoff(
+      this.http.get<SocialMediaSettings[]>(`${this.apiUrl}/social-media/public/`)
+    );
   }
 }

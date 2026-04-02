@@ -144,6 +144,11 @@ export class ApiService {
     return this.http.get(API_URL + '/featured/');
   }
 
+  // Social Media endpoints
+  getSocialMedia(): Observable<any> {
+    return this.http.get(API_URL + '/social-media/public/');
+  }
+
 }
 
 

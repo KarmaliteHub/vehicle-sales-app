@@ -12,13 +12,15 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { CommonModule } from '@angular/common';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatChipsModule } from '@angular/material/chips';
 import { ApiService } from '../../services/api.service';
 import {
   ConfigurationService,
   GeneralSettings,
   AppearanceSettings,
   NotificationSettings,
-  SecuritySettings
+  SecuritySettings,
+  SocialMediaSettings
 } from '../../services/configuration.service';
 
 @Component({
@@ -38,7 +40,8 @@ import {
     ReactiveFormsModule,
     CommonModule,
     MatSnackBarModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    MatChipsModule
   ]
 })
 export class SettingsComponent implements OnInit {
@@ -46,6 +49,7 @@ export class SettingsComponent implements OnInit {
   appearanceForm: FormGroup;
   notificationsForm: FormGroup;
   securityForm: FormGroup;
+  socialMediaForm: FormGroup;
   selectedFile: File | null = null;
   previewUrl: string | ArrayBuffer | null = null;
   currentLogoUrl: string | null = null;
@@ -55,13 +59,20 @@ export class SettingsComponent implements OnInit {
   isLoadingAppearance = false;
   isLoadingNotifications = false;
   isLoadingSecurity = false;
+  isLoadingSocialMedia = false;
 
   // Estados de guardado
   isSavingGeneral = false;
   isSavingAppearance = false;
   isSavingNotifications = false;
   isSavingSecurity = false;
+  isSavingSocialMedia = false;
   isUploadingLogo = false;
+
+  // Redes sociales
+  socialMediaList: SocialMediaSettings[] = [];
+  showAddSocialForm = false;
+  editingSocialMedia: SocialMediaSettings | null = null;
 
   constructor(
     private fb: FormBuilder,
@@ -100,6 +111,15 @@ export class SettingsComponent implements OnInit {
       passwordExpiry: [90, [Validators.min(30), Validators.max(365)]],
       loginAttempts: [5, [Validators.min(3), Validators.max(10)]]
     });
+
+    this.socialMediaForm = this.fb.group({
+      platform: ['', Validators.required],
+      name: ['', Validators.required],
+      url: ['', [Validators.required, Validators.pattern(/^https?:\/\/.+/)]],
+      icon: ['', Validators.required],
+      is_active: [true],
+      order: [0, [Validators.min(0)]]
+    });
   }
 
   ngOnInit(): void {
@@ -107,6 +127,7 @@ export class SettingsComponent implements OnInit {
     this.loadCurrentLogo();
     this.subscribeToThemeChanges();
     this.applyColorStyles();
+    this.loadSocialMediaSettings();
   }
 
   loadCurrentLogo(): void {
@@ -612,5 +633,134 @@ export class SettingsComponent implements OnInit {
 
       this.showSuccessMessage('Configuraciones restablecidas a valores por defecto');
     }
+  }
+
+  // Métodos para redes sociales
+  loadSocialMediaSettings(): void {
+    this.isLoadingSocialMedia = true;
+    this.configurationService.getSocialMediaSettings().subscribe({
+      next: (socialMedia: SocialMediaSettings[]) => {
+        this.socialMediaList = socialMedia;
+        this.isLoadingSocialMedia = false;
+      },
+      error: (error) => {
+        console.error('Error cargando redes sociales:', error);
+        this.showErrorMessage('Error al cargar redes sociales', error.message);
+        this.isLoadingSocialMedia = false;
+      }
+    });
+  }
+
+  onPlatformChange(event: any): void {
+    const platform = event.value;
+    const platformIcons: { [key: string]: string } = {
+      facebook: 'facebook',
+      twitter: 'twitter',
+      instagram: 'instagram',
+      linkedin: 'linkedin',
+      youtube: 'youtube',
+      tiktok: 'music_note',
+      whatsapp: 'whatsapp',
+      telegram: 'telegram',
+      custom: 'link'
+    };
+
+    const platformNames: { [key: string]: string } = {
+      facebook: 'Facebook',
+      twitter: 'Twitter',
+      instagram: 'Instagram',
+      linkedin: 'LinkedIn',
+      youtube: 'YouTube',
+      tiktok: 'TikTok',
+      whatsapp: 'WhatsApp',
+      telegram: 'Telegram',
+      custom: 'Red Social Personalizada'
+    };
+
+    if (platform && platformIcons[platform]) {
+      this.socialMediaForm.patchValue({
+        icon: platformIcons[platform],
+        name: platformNames[platform]
+      });
+    }
+  }
+
+  saveSocialMedia(): void {
+    if (this.socialMediaForm.valid && !this.isSavingSocialMedia) {
+      this.isSavingSocialMedia = true;
+      const socialMediaData: Partial<SocialMediaSettings> = this.socialMediaForm.value;
+
+      if (this.editingSocialMedia) {
+        // Actualizar red social existente
+        this.configurationService.updateSocialMedia(this.editingSocialMedia.id!, socialMediaData).subscribe({
+          next: () => {
+            this.showSuccessMessage('Red social actualizada correctamente');
+            this.loadSocialMediaSettings();
+            this.cancelAddSocialMedia();
+            this.isSavingSocialMedia = false;
+          },
+          error: (error) => {
+            console.error('Error actualizando red social:', error);
+            this.showErrorMessage('Error al actualizar la red social', error.message);
+            this.isSavingSocialMedia = false;
+          }
+        });
+      } else {
+        // Crear nueva red social
+        this.configurationService.createSocialMedia(socialMediaData).subscribe({
+          next: () => {
+            this.showSuccessMessage('Red social agregada correctamente');
+            this.loadSocialMediaSettings();
+            this.cancelAddSocialMedia();
+            this.isSavingSocialMedia = false;
+          },
+          error: (error) => {
+            console.error('Error creando red social:', error);
+            this.showErrorMessage('Error al agregar la red social', error.message);
+            this.isSavingSocialMedia = false;
+          }
+        });
+      }
+    } else if (!this.socialMediaForm.valid) {
+      this.showErrorMessage('Por favor, completa todos los campos requeridos');
+    }
+  }
+
+  editSocialMedia(socialMedia: SocialMediaSettings): void {
+    this.editingSocialMedia = socialMedia;
+    this.socialMediaForm.patchValue(socialMedia);
+    this.showAddSocialForm = true;
+  }
+
+  deleteSocialMedia(id: number): void {
+    if (confirm('¿Estás seguro de que quieres eliminar esta red social?')) {
+      this.configurationService.deleteSocialMedia(id).subscribe({
+        next: () => {
+          this.showSuccessMessage('Red social eliminada correctamente');
+          this.loadSocialMediaSettings();
+        },
+        error: (error) => {
+          console.error('Error eliminando red social:', error);
+          this.showErrorMessage('Error al eliminar la red social', error.message);
+        }
+      });
+    }
+  }
+
+  cancelAddSocialMedia(): void {
+    this.showAddSocialForm = false;
+    this.editingSocialMedia = null;
+    this.socialMediaForm.reset({
+      platform: '',
+      name: '',
+      url: '',
+      icon: '',
+      is_active: true,
+      order: 0
+    });
+  }
+
+  trackBySocialId(index: number, item: SocialMediaSettings): number {
+    return item.id || index;
   }
 }

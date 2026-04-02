@@ -151,7 +151,7 @@ Este plan implementa la finalización de la aplicación de venta de vehículos, 
     - **Propiedad 11: Servicio de archivos media**
     - **Valida: Requisitos 3.4, 3.5, 3.6, 3.7**
 
-- [ ] 8. Implementar actualización inmediata de elementos destacados
+- [-] 8. Implementar actualización inmediata de elementos destacados
   - [ ] 8.1 Mejorar componente de elementos destacados en frontend
     - Implementar actualización automática de lista después de destacar
     - Optimizar llamadas a API para reducir latencia

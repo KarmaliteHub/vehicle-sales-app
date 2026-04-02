@@ -395,3 +395,204 @@ button[disabled] {
     gap: 20px;
   }
 }
+
+/* Estilos para la sección de redes sociales */
+.add-social-form {
+  background: rgba(0, 150, 255, 0.05);
+  border: 1px solid rgba(0, 150, 255, 0.2);
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 30px;
+}
+
+.add-social-form h3 {
+  color: #0096ff;
+  margin-bottom: 20px;
+  font-family: 'Orbitron', sans-serif;
+}
+
+.form-actions {
+  display: flex;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.social-media-list {
+  margin-top: 20px;
+}
+
+.list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.list-header h3 {
+  color: #0096ff;
+  margin: 0;
+  font-family: 'Orbitron', sans-serif;
+}
+
+.social-items {
+  display: grid;
+  gap: 15px;
+}
+
+.social-item {
+  background: rgba(0, 150, 255, 0.05) !important;
+  border: 1px solid rgba(0, 150, 255, 0.2) !important;
+  transition: all 0.3s ease;
+}
+
+.social-item:hover {
+  background: rgba(0, 150, 255, 0.1) !important;
+  border-color: rgba(0, 150, 255, 0.4) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 150, 255, 0.2) !important;
+}
+
+.social-info {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 10px 0;
+}
+
+.social-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 50px;
+  background: linear-gradient(45deg, #0096ff, #00d4ff);
+  border-radius: 50%;
+  color: white;
+}
+
+.social-icon mat-icon {
+  font-size: 24px;
+  width: 24px;
+  height: 24px;
+}
+
+.social-details {
+  flex: 1;
+}
+
+.social-details h4 {
+  color: #fff;
+  margin: 0 0 5px 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.social-details p {
+  color: #aaa;
+  margin: 0 0 5px 0;
+  font-size: 0.9rem;
+  text-transform: capitalize;
+}
+
+.social-url {
+  color: #0096ff;
+  text-decoration: none;
+  font-size: 0.85rem;
+  word-break: break-all;
+}
+
+.social-url:hover {
+  text-decoration: underline;
+}
+
+.social-status {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.order-badge {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.no-social-media {
+  text-align: center;
+  padding: 40px 20px;
+  color: #aaa;
+}
+
+.no-social-media mat-icon {
+  font-size: 48px;
+  width: 48px;
+  height: 48px;
+  color: #555;
+  margin-bottom: 15px;
+}
+
+.no-social-media h3 {
+  color: #666;
+  margin: 0 0 10px 0;
+  font-size: 1.2rem;
+}
+
+.no-social-media p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+/* Estilos para chips de estado */
+::ng-deep .mat-mdc-chip.mat-primary {
+  background-color: #0096ff !important;
+  color: white !important;
+}
+
+::ng-deep .mat-mdc-chip.mat-warn {
+  background-color: #f44336 !important;
+  color: white !important;
+}
+
+/* Responsive para redes sociales */
+@media (max-width: 768px) {
+  .list-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+
+  .social-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+
+  .social-status {
+    align-items: flex-start;
+    flex-direction: row;
+    gap: 15px;
+  }
+
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .add-social-form {
+    padding: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .social-item .mat-card-actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .social-details .social-url {
+    font-size: 0.8rem;
+  }
+}

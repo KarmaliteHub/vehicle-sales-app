@@ -7,7 +7,8 @@ from . import views
 router = DefaultRouter()
 router.register(r'configurations', views.SystemConfigurationViewSet)
 router.register(r'system-logs', views.SystemLogViewSet)
-router.register(r'site-logo', views.SiteLogoViewSet)  # Añadir esta línea
+router.register(r'site-logo', views.SiteLogoViewSet)
+router.register(r'social-media', views.SocialMediaViewSet)
 
 urlpatterns = [
     path('register/', views.UserRegistrationView.as_view(), name='register'),

@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from './services/auth.service';
+import { ApiService } from './services/api.service';
 
 // Angular Material
 import { MatToolbarModule } from '@angular/material/toolbar';
@@ -28,20 +29,40 @@ export class AppComponent implements OnInit {
   title = 'Venta de Autos y Motos';
   isLoggedIn = false;
   username: string | null = null;
+  socialMediaList: any[] = [];
 
   constructor(
     private authService: AuthService,
+    private apiService: ApiService,
     private router: Router,
     private snackBar: MatSnackBar
   ) {}
 
   ngOnInit(): void {
     this.checkAuthStatus();
+    this.loadSocialMedia();
   }
 
   checkAuthStatus(): void {
     this.isLoggedIn = this.authService.isLoggedIn();
     this.username = this.authService.getUsername();
+  }
+
+  loadSocialMedia(): void {
+    this.apiService.getSocialMedia().subscribe({
+      next: (socialMedia) => {
+        this.socialMediaList = socialMedia;
+      },
+      error: (error) => {
+        console.error('Error loading social media:', error);
+        // Fallback to default social media if API fails
+        this.socialMediaList = [
+          { name: 'Facebook', icon: 'facebook', url: '#' },
+          { name: 'Twitter', icon: 'twitter', url: '#' },
+          { name: 'Instagram', icon: 'instagram', url: '#' }
+        ];
+      }
+    });
   }
 
   logout(): void {

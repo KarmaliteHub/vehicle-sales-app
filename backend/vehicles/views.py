@@ -4,7 +4,7 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.decorators import api_view, permission_classes, action
 from django.contrib.auth.models import User
 from django.db.models import Q
-from .models import Car, Motorcycle, ContactMessage, Subscriber, FeaturedItem, Discount, SystemConfiguration, SystemLog, SiteLogo
+from .models import Car, Motorcycle, ContactMessage, Subscriber, FeaturedItem, Discount, SystemConfiguration, SystemLog, SiteLogo, SocialMedia
 from .serializers import (
     CarSerializer, 
     MotorcycleSerializer, 
@@ -15,7 +15,8 @@ from .serializers import (
     DiscountSerializer,
     SystemConfigurationSerializer,
     SystemLogSerializer,
-    SiteLogoSerializer
+    SiteLogoSerializer,
+    SocialMediaSerializer
 )
 from rest_framework_simplejwt.tokens import RefreshToken
 import csv
@@ -444,6 +445,27 @@ class SiteLogoViewSet(viewsets.ModelViewSet):
     
     def perform_update(self, serializer):
         serializer.save(uploaded_by=self.request.user)
+
+class SocialMediaViewSet(viewsets.ModelViewSet):
+    queryset = SocialMedia.objects.filter(is_active=True)
+    serializer_class = SocialMediaSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_queryset(self):
+        return SocialMedia.objects.filter(is_active=True).order_by('order', 'created_at')
+    
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user)
+    
+    def perform_update(self, serializer):
+        serializer.save(created_by=self.request.user)
+    
+    @action(detail=False, methods=['get'], permission_classes=[permissions.AllowAny])
+    def public(self, request):
+        """Endpoint público para obtener redes sociales activas"""
+        social_media = self.get_queryset()
+        serializer = self.get_serializer(social_media, many=True)
+        return Response(serializer.data)
 
 # Agregar función para enviar notificaciones
 def send_vehicle_sold_notification(vehicle, vehicle_type, user=None):

@@ -340,3 +340,35 @@ class SiteLogo(models.Model):
                         return f"{parts[0]}://{domain_part}"
             return url
         return None
+
+class SocialMedia(models.Model):
+    """Modelo para gestionar redes sociales dinámicamente"""
+    PLATFORM_CHOICES = [
+        ('facebook', 'Facebook'),
+        ('twitter', 'Twitter'),
+        ('instagram', 'Instagram'),
+        ('linkedin', 'LinkedIn'),
+        ('youtube', 'YouTube'),
+        ('tiktok', 'TikTok'),
+        ('whatsapp', 'WhatsApp'),
+        ('telegram', 'Telegram'),
+        ('custom', 'Personalizado'),
+    ]
+    
+    platform = models.CharField(max_length=20, choices=PLATFORM_CHOICES)
+    name = models.CharField(max_length=100, help_text="Nombre personalizado para mostrar")
+    url = models.URLField(help_text="URL completa de la red social")
+    icon = models.CharField(max_length=50, help_text="Nombre del icono Material (ej: facebook, twitter)")
+    is_active = models.BooleanField(default=True)
+    order = models.PositiveIntegerField(default=0, help_text="Orden de aparición")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    
+    class Meta:
+        ordering = ['order', 'created_at']
+        verbose_name = 'Red Social'
+        verbose_name_plural = 'Redes Sociales'
+    
+    def __str__(self):
+        return f"{self.name} ({self.platform})"
